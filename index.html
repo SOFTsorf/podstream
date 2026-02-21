@@ -9,6 +9,7 @@
         :root {
             --spotify-green: #1DB954;
             --bg-color: #121212;
+            --card-bg: #2a2a2a;
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -24,17 +25,17 @@
         #bg-blur {
             position: absolute; inset: -50px; z-index: -1;
             background-size: cover; background-position: center;
-            filter: blur(50px) brightness(0.4);
+            filter: blur(60px) brightness(0.3);
             transition: background-image 0.8s ease-in-out;
         }
 
         /* --- START SCREEN --- */
         #start-screen {
-            position: fixed; inset: 0; z-index: 10000; background: #000;
+            position: fixed; inset: 0; z-index: 10000; background: #121212;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
         }
         .start-btn {
-            background: var(--spotify-green); color: white; border: none;
+            background: var(--spotify-green); color: black; border: none;
             padding: 18px 60px; border-radius: 40px; font-size: 20px; font-weight: bold; cursor: pointer;
             box-shadow: 0 4px 15px rgba(29, 185, 84, 0.4);
             transition: transform 0.2s;
@@ -43,22 +44,27 @@
 
         /* --- HEADER --- */
         header {
-            position: absolute; top: 0; width: 100%; z-index: 100;
-            padding: calc(env(safe-area-inset-top) + 20px) 20px 20px; 
-            display: flex; justify-content: center; align-items: center;
+            position: absolute; top: 0; left: 0; width: 100%; z-index: 100;
+            padding: calc(env(safe-area-inset-top) + 20px) 25px 20px; 
+            display: flex; justify-content: space-between; align-items: center;
         }
-        .logo-text { font-size: 18px; font-weight: 600; opacity: 0.9; letter-spacing: 1px; }
-        .history-btn { position: absolute; right: 25px; font-size: 22px; cursor: pointer; text-shadow: 0 2px 10px rgba(0,0,0,0.5); }
+        .logo-text { font-size: 18px; font-weight: 700; letter-spacing: 0.5px; flex: 1; text-align: center; }
+        
+        .header-actions {
+            position: absolute; right: 25px; display: flex; gap: 20px; align-items: center;
+        }
+        .header-icon { font-size: 22px; cursor: pointer; text-shadow: 0 2px 10px rgba(0,0,0,0.5); transition: transform 0.2s; }
+        .header-icon:active { transform: scale(0.8); }
 
         /* --- MAIN CONTENT --- */
         #feed-container {
-            height: 100dvh; display: flex; flex-direction: column;
+            height: 100dvh; width: 100vw; display: flex; flex-direction: column;
             align-items: center; justify-content: center; position: relative;
         }
 
         .visualizer-wrapper {
             display: flex; align-items: center; gap: 20px; width: 100%; justify-content: center;
-            transform: translateY(-40px); /* Leicht nach oben geschoben, wegen der unteren Leiste */
+            transform: translateY(-50px);
         }
 
         .audio-bars { display: flex; align-items: center; gap: 4px; height: 50px; }
@@ -69,36 +75,38 @@
 
         .cover-container {
             position: relative; width: 75vw; max-width: 340px; aspect-ratio: 1/1;
-            /* Wichtig: Transition nur beim Loslassen, nicht beim Ziehen */
             transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
             z-index: 10;
         }
         .cover-art {
             position: absolute; inset: 0; width: 100%; height: 100%;
-            border-radius: 20px; object-fit: cover;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            border-radius: 15px; object-fit: cover;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.4);
             transition: opacity 0.6s ease-in-out;
         }
         .fade-out { opacity: 0 !important; }
 
-        /* --- SONG INFO & CARD (JETZT UNTEN) --- */
+        /* --- SONG INFO & CARD --- */
         .info-section {
-            position: absolute; bottom: calc(env(safe-area-inset-bottom) + 30px);
-            width: 90vw; max-width: 400px;
+            position: absolute; bottom: calc(env(safe-area-inset-bottom) + 40px);
+            width: 85vw; max-width: 400px;
             transition: opacity 0.5s ease-in-out;
+            display: flex; flex-direction: column; align-items: stretch;
         }
-        .artist-tag { font-size: 20px; font-weight: 800; margin-bottom: 15px; text-shadow: 0 2px 10px rgba(0,0,0,0.5); }
+        .artist-tag { 
+            font-size: 22px; font-weight: 800; margin-bottom: 12px; margin-left: 5px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.5); text-align: left;
+        }
 
         .bottom-card {
-            background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(25px);
-            -webkit-backdrop-filter: blur(25px); border-radius: 25px;
-            padding: 15px 20px; display: flex; align-items: center; gap: 12px;
-            border: 1px solid rgba(255,255,255,0.2); position: relative; overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            background: var(--card-bg); border-radius: 25px;
+            padding: 15px 20px; display: flex; align-items: center; gap: 15px;
+            position: relative; overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
         }
         .song-details { flex: 1; overflow: hidden; }
-        .song-details h3 { margin: 0; font-size: 17px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .song-details p { margin: 4px 0 0; font-size: 14px; opacity: 0.7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
+        .song-details h3 { margin: 0; font-size: 17px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .song-details p { margin: 4px 0 0; font-size: 14px; opacity: 0.6; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
 
         .action-icon {
             font-size: 24px; cursor: pointer; transition: transform 0.2s, color 0.2s;
@@ -116,19 +124,54 @@
             width: 45px; height: 45px; background: var(--spotify-green);
             border-radius: 50%; display: flex; align-items: center; justify-content: center;
             font-size: 24px; color: black; cursor: pointer; z-index: 2; flex-shrink: 0;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
         }
 
         .progress-line {
-            position: absolute; bottom: 0; left: 0; height: 4px;
-            background: var(--spotify-green); width: 0%; border-radius: 2px;
+            position: absolute; bottom: 0; left: 0; height: 3px;
+            background: rgba(255,255,255,0.8); width: 0%; border-radius: 2px;
             transition: width 0.1s linear;
         }
+
+        /* --- PANELS (HISTORY & LIKES) --- */
+        .side-panel {
+            position: fixed; inset: 0; background: #121212; z-index: 5000;
+            padding: calc(env(safe-area-inset-top) + 80px) 20px 20px; overflow-y: auto;
+            transform: translateX(100%);
+            transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+        .side-panel.active { transform: translateX(0); }
+        
+        .panel-header {
+            position: absolute; top: calc(env(safe-area-inset-top) + 20px); left: 20px; right: 20px;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .panel-back { position: absolute; left: 0; font-size: 24px; cursor: pointer; padding: 10px; }
+        .panel-title { margin: 0; font-size: 20px; font-weight: bold; }
+
+        .list-container { margin-top: 10px; }
+        
+        .list-item {
+            display: flex; align-items: center; gap: 15px; margin-bottom: 15px;
+            background: #2a2a2a; padding: 10px; border-radius: 15px;
+            transition: background 0.2s;
+        }
+        .list-item img { width: 55px; height: 55px; border-radius: 10px; object-fit: cover;}
+        .list-item-info { flex: 1; overflow: hidden; }
+        .list-item-info b { font-size: 15px; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .list-item-info small { color: #aaa; }
+        
+        .list-actions { display: flex; gap: 15px; align-items: center; padding-right: 5px; }
+        .list-btn { font-size: 18px; color: #fff; opacity: 0.7; cursor: pointer; transition: opacity 0.2s; }
+        .list-btn:active { opacity: 1; transform: scale(0.9); }
+        .list-btn.delete { color: #ff3b30; }
+        .list-btn.play { color: var(--spotify-green); }
+
+        .active-history-item { border-left: 4px solid var(--spotify-green); background: #333; }
 
         /* --- MODAL --- */
         #modal-overlay {
             position: fixed; inset: 0; z-index: 10000;
-            background: rgba(0,0,0,0.7); display: none;
+            background: rgba(0,0,0,0.8); display: none;
             align-items: center; justify-content: center; padding: 25px;
             backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
         }
@@ -139,7 +182,6 @@
             border: 1px solid rgba(255,255,255,0.1);
         }
         @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-        
         .modal-box h2 { margin: 0 0 10px; font-size: 22px; }
         .modal-box p { margin: 0 0 25px; color: #aaa; font-size: 15px; line-height: 1.4; }
         .btn-green {
@@ -149,36 +191,6 @@
         }
         .btn-text { background: none; color: white; border: none; font-size: 16px; font-weight: bold; cursor: pointer; opacity: 0.7;}
 
-        /* --- HISTORY PANEL (ANIMIERT) --- */
-        #history-panel {
-            position: fixed; inset: 0; background: #121212; z-index: 5000;
-            padding: calc(env(safe-area-inset-top) + 80px) 20px 20px; overflow-y: auto;
-            transform: translateX(100%); /* Startet außerhalb des Bildschirms */
-            transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
-        }
-        #history-panel.active { transform: translateX(0); /* Slidet rein */ }
-        
-        .history-item {
-            display: flex; align-items: center; gap: 15px; margin-bottom: 15px;
-            background: rgba(255,255,255,0.05); padding: 10px; border-radius: 15px;
-            cursor: pointer; transition: background 0.2s;
-        }
-        .history-item:active { background: rgba(255,255,255,0.1); }
-        .history-item img { width: 55px; height: 55px; border-radius: 10px; object-fit: cover;}
-        .history-item.active-history-item { border-left: 4px solid var(--spotify-green); background: rgba(255,255,255,0.08); }
-
-        /* Animation für fliegende Herzen (Doppeltipp) */
-        .floating-heart {
-            position: absolute; font-size: 80px; color: #ff3b30;
-            pointer-events: none; opacity: 0; z-index: 100;
-            transform: translate(-50%, -50%) scale(0.5);
-            animation: floatHeartAnim 0.8s ease-out forwards;
-        }
-        @keyframes floatHeartAnim {
-            0% { opacity: 1; transform: translate(-50%, -50%) scale(0.5); }
-            50% { transform: translate(-50%, -60%) scale(1.2); }
-            100% { opacity: 0; transform: translate(-50%, -80%) scale(1); }
-        }
     </style>
 </head>
 <body>
@@ -191,8 +203,11 @@
     </div>
 
     <header>
-        <div class="logo-text">MusicBack</div>
-        <i class="fas fa-history history-btn" onclick="toggleHistory(true)"></i>
+        <div style="width: 60px;"></div> <div class="logo-text">MusicBack</div>
+        <div class="header-actions">
+            <i class="fas fa-heart header-icon" onclick="toggleLikes(true)"></i>
+            <i class="fas fa-history header-icon" onclick="toggleHistory(true)"></i>
+        </div>
     </header>
 
     <div id="feed-container">
@@ -228,17 +243,27 @@
 
     <div id="modal-overlay">
         <div class="modal-box">
-            <h2>Bist du sicher?</h2>
-            <p>MusicBack wird pausiert und du wirst direkt zum Song auf Spotify weitergeleitet.</p>
-            <button class="btn-green" onclick="confirmSpotify()">Auf Spotify öffnen</button>
+            <h2>Auf Spotify öffnen?</h2>
+            <p>MusicBack wird pausiert und du wirst direkt zum Song weitergeleitet.</p>
+            <button class="btn-green" onclick="confirmSpotify()">Öffnen</button>
             <button class="btn-text" onclick="closeModal()">Abbrechen</button>
         </div>
     </div>
 
-    <div id="history-panel">
-        <i class="fas fa-chevron-left" style="position:absolute; top:calc(env(safe-area-inset-top) + 30px); left:20px; font-size:24px; cursor:pointer;" onclick="toggleHistory(false)"></i>
-        <h2 style="margin-bottom:25px; margin-top:0;">Dein Verlauf</h2>
-        <div id="history-list"></div>
+    <div id="history-panel" class="side-panel">
+        <div class="panel-header">
+            <i class="fas fa-chevron-left panel-back" onclick="toggleHistory(false)"></i>
+            <h2 class="panel-title">Verlauf</h2>
+        </div>
+        <div id="history-list" class="list-container"></div>
+    </div>
+
+    <div id="likes-panel" class="side-panel">
+        <div class="panel-header">
+            <i class="fas fa-chevron-left panel-back" onclick="toggleLikes(false)"></i>
+            <h2 class="panel-title">Favoriten</h2>
+        </div>
+        <div id="likes-list" class="list-container"></div>
     </div>
 
     <audio id="player" crossorigin="anonymous"></audio>
@@ -249,10 +274,10 @@
     const coverContainer = document.getElementById('cover-container');
     const likeBtn = document.getElementById('like-btn');
     
-    // Playback State
+    // State
     let tracks = [];
     let playedHistory = [];
-    let likedSongs = new Set(); // Speichert gelikte Track-IDs
+    let likedTracks = new Map(); // Speichert komplette Track-Objekte
     let currentIndex = -1;
     let isTransitioning = false;
 
@@ -266,6 +291,13 @@
 
     async function startApp() {
         document.getElementById('start-screen').style.display = 'none';
+        
+        // Likes aus LocalStorage laden
+        const savedLikes = localStorage.getItem('musicback_likes');
+        if(savedLikes) {
+            const parsed = JSON.parse(savedLikes);
+            parsed.forEach(track => likedTracks.set(track.trackId, track));
+        }
         
         if (!audioCtx) {
             audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -298,7 +330,6 @@
     }
 
     async function loadMusic() {
-        // Größeres Limit für längeren Spaß
         const res = await fetch('https://itunes.apple.com/search?term=techno&entity=song&limit=100');
         const data = await res.json();
         tracks = data.results.filter(t => t.previewUrl);
@@ -325,11 +356,22 @@
         loadTrackIntoUI(playedHistory[currentIndex]);
     }
 
-    function playSpecificTrack(index) {
-        if (index === currentIndex || isTransitioning) return;
-        currentIndex = index;
-        loadTrackIntoUI(playedHistory[currentIndex]);
+    function playSpecificTrack(track) {
+        if (isTransitioning) return;
+        
+        // Prüfen ob es schon in der History ist
+        let index = playedHistory.findIndex(t => t.trackId === track.trackId);
+        
+        if (index !== -1) {
+            currentIndex = index;
+        } else {
+            playedHistory.push(track);
+            currentIndex = playedHistory.length - 1;
+        }
+        
+        loadTrackIntoUI(track);
         toggleHistory(false);
+        toggleLikes(false);
     }
 
     function loadTrackIntoUI(track) {
@@ -338,13 +380,13 @@
         const infoSection = document.getElementById('info-section');
         const bgBlur = document.getElementById('bg-blur');
 
-        // Like-Status aktualisieren
-        if(likedSongs.has(track.trackId)) {
+        // Update Like Button State
+        if(likedTracks.has(track.trackId)) {
             likeBtn.classList.add('liked');
             likeBtn.classList.replace('far', 'fas');
         } else {
             likeBtn.classList.remove('liked');
-            likeBtn.classList.replace('fas', 'far'); // Outline Herz
+            likeBtn.classList.replace('fas', 'far');
         }
 
         let vol = player.volume;
@@ -366,7 +408,9 @@
                     
                     document.getElementById('display-artist').innerText = track.artistName;
                     document.getElementById('display-title').innerText = track.trackName;
-                    document.getElementById('display-album').innerText = track.collectionName;
+                    
+                    // Album oder Tracknummer anzeigen (wie im Bild die "3")
+                    document.getElementById('display-album').innerText = track.trackNumber || track.collectionName || '';
 
                     player.src = track.previewUrl;
                     if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -384,7 +428,6 @@
                             player.volume = 1;
                             clearInterval(fadeIn);
                             isTransitioning = false;
-                            updateHistory();
                         }
                     }, 50);
                 }, 400); 
@@ -392,20 +435,17 @@
         }, 30); 
     }
 
-    // --- NEUE SWIPE LOGIK & DOPPELTIPP ---
+    // --- SWIPE & GESTEN ---
     coverContainer.addEventListener('touchstart', e => {
         if (isTransitioning) return;
         startY = e.touches[0].clientY;
         isDragging = true;
-        // Animation beim Ziehen ausschalten, damit es sofort folgt
         coverContainer.style.transition = 'none'; 
     });
 
     coverContainer.addEventListener('touchmove', e => {
         if (!isDragging || isTransitioning) return;
         const diff = e.touches[0].clientY - startY;
-        
-        // Fühlt sich natürlicher an, wenn es etwas Widerstand hat (* 0.6)
         coverContainer.style.transform = `translateY(${diff * 0.6}px) scale(0.95)`;
     });
 
@@ -414,29 +454,23 @@
         isDragging = false;
         const diff = e.changedTouches[0].clientY - startY;
         
-        // Animation wieder einschalten fürs Zurückschnappen
         coverContainer.style.transition = 'transform 0.4s cubic-bezier(0.25, 1, 0.5, 1)';
         coverContainer.style.transform = 'translateY(0) scale(1)';
 
-        // Wisch-Schwellenwert überschritten?
-        if (diff < -80) { // Nach oben
-            if (navigator.vibrate) navigator.vibrate(40); // Kurze Vibration
+        if (diff < -80) { 
+            if (navigator.vibrate) navigator.vibrate(40); 
             playNextTrack();
-        } else if (diff > 80 && currentIndex > 0) { // Nach unten
+        } else if (diff > 80 && currentIndex > 0) { 
             if (navigator.vibrate) navigator.vibrate(40);
             playPrevTrack();
         } else if (Math.abs(diff) < 10) { 
-            // Tap / Klick Erkennung (inkl. Doppeltipp für Like)
             const currentTime = new Date().getTime();
             const tapLength = currentTime - lastTapTime;
             
             if (tapLength < 300 && tapLength > 0) {
-                // Doppeltipp erkannt
-                toggleLike(null, true, e.changedTouches[0].clientX, e.changedTouches[0].clientY);
+                toggleLike(null, true);
             } else {
-                // Einfacher Tap -> Play/Pause
                 setTimeout(() => {
-                    // Verhindert, dass Play/Pause triggert, wenn es eigentlich ein Doppeltipp wird
                     if(new Date().getTime() - lastTapTime >= 300) togglePlayPause();
                 }, 300);
             }
@@ -456,35 +490,127 @@
         }
     }
 
-    function toggleLike(e, isDoubleTap = false, x = 0, y = 0) {
+    function toggleLike(e, isDoubleTap = false) {
         if(e) e.stopPropagation();
         if(currentIndex === -1) return;
 
         const track = playedHistory[currentIndex];
-        const isLiked = likedSongs.has(track.trackId);
+        const isLiked = likedTracks.has(track.trackId);
 
         if(isLiked && !isDoubleTap) {
-            likedSongs.delete(track.trackId);
+            likedTracks.delete(track.trackId);
             likeBtn.classList.remove('liked');
             likeBtn.classList.replace('fas', 'far');
         } else if (!isLiked) {
-            likedSongs.add(track.trackId);
+            likedTracks.set(track.trackId, track);
             likeBtn.classList.add('liked');
             likeBtn.classList.replace('far', 'fas');
-            if(navigator.vibrate) navigator.vibrate([30, 50, 30]); // Herzschlag-Vibration
+            if(navigator.vibrate) navigator.vibrate([30, 50, 30]); 
         }
 
-        // Visuelles Feedback beim Doppeltipp auf das Cover
-        if(isDoubleTap) {
-            const heart = document.createElement('i');
-            heart.className = 'fas fa-heart floating-heart';
-            heart.style.left = x + 'px';
-            heart.style.top = y + 'px';
-            document.body.appendChild(heart);
-            setTimeout(() => heart.remove(), 800);
+        // Speichern
+        localStorage.setItem('musicback_likes', JSON.stringify(Array.from(likedTracks.values())));
+        if(document.getElementById('likes-panel').classList.contains('active')) renderLikes();
+    }
+
+    function removeFromLikes(trackId) {
+        likedTracks.delete(trackId);
+        localStorage.setItem('musicback_likes', JSON.stringify(Array.from(likedTracks.values())));
+        renderLikes();
+        // Aktualisiere Herz im Feed, falls der Song gerade läuft
+        if(playedHistory[currentIndex] && playedHistory[currentIndex].trackId === trackId) {
+            likeBtn.classList.remove('liked');
+            likeBtn.classList.replace('fas', 'far');
         }
     }
 
+    async function downloadSong(url, filename) {
+        try {
+            const response = await fetch(url);
+            const blob = await response.blob();
+            const blobUrl = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = blobUrl;
+            a.download = `${filename}.m4a`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(blobUrl);
+            document.body.removeChild(a);
+        } catch (err) {
+            console.error(err);
+            alert("Download fehlgeschlagen.");
+        }
+    }
+
+    // --- PANELS RENDERN ---
+    function renderHistory() {
+        const list = document.getElementById('history-list');
+        let html = '';
+        for (let i = playedHistory.length - 1; i >= 0; i--) {
+            const t = playedHistory[i];
+            const isActive = i === currentIndex ? 'active-history-item' : '';
+            // Um HTML-Fehler bei Namen mit Quotes zu vermeiden
+            const safeTrackName = t.trackName.replace(/'/g, ""); 
+            const safeArtistName = t.artistName.replace(/'/g, "");
+
+            html += `
+                <div class="list-item ${isActive}">
+                    <img src="${t.artworkUrl100}" onclick='playSpecificTrack(${JSON.stringify(t)})'>
+                    <div class="list-item-info" onclick='playSpecificTrack(${JSON.stringify(t)})'>
+                        <b>${t.trackName}</b>
+                        <small>${t.artistName}</small>
+                    </div>
+                    <div class="list-actions">
+                        ${isActive ? '<i class="fas fa-volume-up" style="color: var(--spotify-green); margin-right:10px;"></i>' : ''}
+                        <i class="fas fa-download list-btn" onclick="downloadSong('${t.previewUrl}', '${safeArtistName} - ${safeTrackName}')"></i>
+                    </div>
+                </div>
+            `;
+        }
+        list.innerHTML = html || '<p style="text-align:center; color:#aaa; margin-top:30px;">Noch keine Songs gehört.</p>';
+    }
+
+    function renderLikes() {
+        const list = document.getElementById('likes-list');
+        let html = '';
+        const tracksArray = Array.from(likedTracks.values()).reverse();
+        
+        tracksArray.forEach(t => {
+            const safeTrackName = t.trackName.replace(/'/g, ""); 
+            const safeArtistName = t.artistName.replace(/'/g, "");
+
+            html += `
+                <div class="list-item">
+                    <img src="${t.artworkUrl100}">
+                    <div class="list-item-info">
+                        <b>${t.trackName}</b>
+                        <small>${t.artistName}</small>
+                    </div>
+                    <div class="list-actions">
+                        <i class="fas fa-play list-btn play" onclick='playSpecificTrack(${JSON.stringify(t)})'></i>
+                        <i class="fas fa-download list-btn" onclick="downloadSong('${t.previewUrl}', '${safeArtistName} - ${safeTrackName}')"></i>
+                        <i class="fas fa-trash list-btn delete" onclick="removeFromLikes(${t.trackId})"></i>
+                    </div>
+                </div>
+            `;
+        });
+        list.innerHTML = html || '<p style="text-align:center; color:#aaa; margin-top:30px;">Noch keine Favoriten.</p>';
+    }
+
+    function toggleHistory(show) {
+        const panel = document.getElementById('history-panel');
+        if(show) { renderHistory(); panel.classList.add('active'); } 
+        else { panel.classList.remove('active'); }
+    }
+
+    function toggleLikes(show) {
+        const panel = document.getElementById('likes-panel');
+        if(show) { renderLikes(); panel.classList.add('active'); } 
+        else { panel.classList.remove('active'); }
+    }
+
+    // --- SPOTIFY ---
     function triggerSpotify(event) {
         event.stopPropagation();
         player.pause();
@@ -503,37 +629,6 @@
         const url = `spotify:search:${encodeURIComponent(track.artistName + ' ' + track.trackName)}`;
         window.open(url, '_blank');
         closeModal();
-    }
-
-    // --- HISTORY ANIMIERT ---
-    function updateHistory() {
-        const list = document.getElementById('history-list');
-        let html = '';
-        for (let i = playedHistory.length - 1; i >= 0; i--) {
-            const t = playedHistory[i];
-            const isActive = i === currentIndex ? 'active-history-item' : '';
-            html += `
-                <div class="history-item ${isActive}" onclick="playSpecificTrack(${i})">
-                    <img src="${t.artworkUrl100}">
-                    <div style="flex:1">
-                        <b style="font-size: 15px;">${t.trackName}</b><br>
-                        <small style="color: #aaa;">${t.artistName}</small>
-                    </div>
-                    ${isActive ? '<i class="fas fa-volume-up" style="color: var(--spotify-green);"></i>' : ''}
-                </div>
-            `;
-        }
-        list.innerHTML = html;
-    }
-
-    function toggleHistory(show) {
-        const panel = document.getElementById('history-panel');
-        if(show) {
-            updateHistory();
-            panel.classList.add('active');
-        } else {
-            panel.classList.remove('active');
-        }
     }
 
     player.ontimeupdate = () => {
