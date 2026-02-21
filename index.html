@@ -8,7 +8,7 @@
     <style>
         :root {
             --spotify-green: #1DB954;
-            --bg-color: #b5a93e; 
+            --bg-color: #8c5046; /* Angepasst an dein letztes Bild */
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -18,7 +18,7 @@
             background-color: var(--bg-color);
             color: white; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
             overflow: hidden; touch-action: none;
-            transition: background-color 0.8s ease;
+            transition: background-color 1.2s ease-in-out; /* Weiches Überblenden der Farbe */
         }
 
         /* --- START SCREEN --- */
@@ -55,25 +55,29 @@
         .audio-bars {
             display: flex; align-items: center; gap: 4px; height: 50px;
         }
-        /* Die CSS-Animation ist raus, JS übernimmt die Höhe */
         .bar { 
-            width: 4px; 
-            background: rgba(255,255,255,0.9); 
-            border-radius: 2px; 
-            height: 10px; 
-            transition: height 0.05s ease; /* Macht die Sprünge etwas weicher */
+            width: 4px; background: rgba(255,255,255,0.9); border-radius: 2px; height: 10px; 
+            transition: height 0.05s ease;
         }
 
-        .cover-art {
+        /* Container fürs Überblenden */
+        .cover-container {
+            position: relative;
             width: 70vw; max-width: 320px; aspect-ratio: 1/1;
+        }
+        .cover-art {
+            position: absolute; inset: 0;
+            width: 100%; height: 100%;
             border-radius: 12px; object-fit: cover;
             box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-            transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+            transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1), opacity 0.6s ease-in-out;
         }
+        .fade-out { opacity: 0 !important; transform: scale(0.9) !important; }
 
         /* --- SONG INFO & CARD --- */
         .info-section {
             width: 90vw; max-width: 400px; margin-top: 40px;
+            transition: opacity 0.5s ease-in-out;
         }
         .artist-tag { font-size: 18px; font-weight: 700; margin-bottom: 20px; text-align: center; }
 
@@ -86,7 +90,7 @@
         }
         .song-details { flex: 1; overflow: hidden; padding-right: 10px; }
         .song-details h3 { margin: 0; font-size: 17px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .song-details p { margin: 4px 0 0; font-size: 14px; opacity: 0.8; }
+        .song-details p { margin: 4px 0 0; font-size: 14px; opacity: 0.8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
 
         .spotify-circle {
             width: 45px; height: 45px; background: var(--spotify-green);
@@ -131,8 +135,11 @@
         .history-item {
             display: flex; align-items: center; gap: 15px; margin-bottom: 15px;
             background: rgba(255,255,255,0.05); padding: 10px; border-radius: 15px;
+            cursor: pointer; transition: background 0.2s;
         }
+        .history-item:active { background: rgba(255,255,255,0.1); }
         .history-item img { width: 50px; height: 50px; border-radius: 8px; }
+        .history-item.active-history-item { border-left: 4px solid var(--spotify-green); }
     </style>
 </head>
 <body>
@@ -152,20 +159,25 @@
             <div class="audio-bars" id="bars-left">
                 <div class="bar"></div><div class="bar"></div><div class="bar"></div>
             </div>
-            <img id="main-cover" class="cover-art" src="" alt="" onclick="togglePlayPause()">
+            
+            <div class="cover-container" onclick="togglePlayPause()">
+                <img id="main-cover-bg" class="cover-art fade-out" src="" alt="">
+                <img id="main-cover" class="cover-art" src="" alt="">
+            </div>
+
             <div class="audio-bars" id="bars-right">
                 <div class="bar"></div><div class="bar"></div><div class="bar"></div>
             </div>
         </div>
 
-        <div class="info-section">
+        <div class="info-section" id="info-section">
             <div class="artist-tag" id="display-artist">Artist</div>
             <div class="bottom-card">
                 <div class="song-details">
                     <h3 id="display-title">Song Title</h3>
                     <p id="display-album">Album Name</p>
                 </div>
-                <div class="spotify-circle" onclick="triggerSpotify()">
+                <div class="spotify-circle" onclick="triggerSpotify(event)">
                     <i class="fab fa-spotify"></i>
                 </div>
                 <div class="progress-line" id="progress-bar"></div>
@@ -194,135 +206,194 @@
 <script>
     const player = document.getElementById('player');
     const allBars = document.querySelectorAll('.bar');
-    const historyData = [];
+    
+    // Playback State
     let tracks = [];
-    let currentTrack = null;
+    let playedHistory = [];
+    let currentIndex = -1; // Zeigt auf den aktuellen Song im playedHistory Array
+    let isTransitioning = false;
+
+    // Swipe State
     let startY = 0;
 
-    // Web Audio API Variablen
+    // Web Audio API
     let audioCtx, analyser, dataArray;
 
     async function startApp() {
         document.getElementById('start-screen').style.display = 'none';
         
-        // AudioContext muss initialisiert werden, NACHDEM der Nutzer interagiert hat (Start Button)
         if (!audioCtx) {
             audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             analyser = audioCtx.createAnalyser();
             const source = audioCtx.createMediaElementSource(player);
             source.connect(analyser);
             analyser.connect(audioCtx.destination);
-            
-            analyser.fftSize = 64; // Kleine Auflösung reicht für ein paar Balken
-            const bufferLength = analyser.frequencyBinCount;
-            dataArray = new Uint8Array(bufferLength);
-            
-            // Schleife für die Visualisierung starten
+            analyser.fftSize = 64;
+            dataArray = new Uint8Array(analyser.frequencyBinCount);
             drawVisualizer();
         }
 
         await loadMusic();
     }
 
-    // --- AUDIO VISUALIZATION LOOP ---
     function drawVisualizer() {
         requestAnimationFrame(drawVisualizer);
-        
         if (!player.paused) {
             analyser.getByteFrequencyData(dataArray);
-            
-            // Wir mappen bestimmte Frequenz-Bereiche auf die 6 Balken
-            // dataArray hat Werte von 0 bis 255
             if (allBars.length >= 6) {
-                // Linke Seite (Bass bis Mitten)
                 allBars[0].style.height = 10 + (dataArray[2] / 255) * 40 + 'px';
                 allBars[1].style.height = 10 + (dataArray[4] / 255) * 40 + 'px';
                 allBars[2].style.height = 10 + (dataArray[6] / 255) * 40 + 'px';
-                
-                // Rechte Seite (gespiegelt für Symmetrie)
                 allBars[3].style.height = 10 + (dataArray[6] / 255) * 40 + 'px';
                 allBars[4].style.height = 10 + (dataArray[4] / 255) * 40 + 'px';
                 allBars[5].style.height = 10 + (dataArray[2] / 255) * 40 + 'px';
             }
         } else {
-            // Wenn pausiert, Balken sanft auf 10px zurücksetzen
             allBars.forEach(bar => bar.style.height = '10px');
         }
     }
 
     async function loadMusic() {
-        // Lädt Techno Songs aus der iTunes API
         const res = await fetch('https://itunes.apple.com/search?term=techno&entity=song&limit=50');
         const data = await res.json();
         tracks = data.results.filter(t => t.previewUrl);
-        showNext();
+        playNextTrack();
     }
 
-    function showNext() {
-        if(tracks.length === 0) return;
-        currentTrack = tracks.splice(Math.floor(Math.random() * tracks.length), 1)[0];
+    function playNextTrack() {
+        if (isTransitioning) return;
         
-        const art = currentTrack.artworkUrl100.replace('100x100bb', '600x600bb');
-        document.getElementById('main-cover').src = art;
-        document.getElementById('display-artist').innerText = currentTrack.artistName;
-        document.getElementById('display-title').innerText = currentTrack.trackName;
-        document.getElementById('display-album').innerText = currentTrack.collectionName;
-        
-        // Hintergrundfarbe dynamisch generieren (für den Vibe)
-        document.body.style.backgroundColor = `hsl(${Math.random() * 360}, 40%, 40%)`;
-        
-        // Audio Context checken (Browser blockieren manchmal Audio-Wiedergabe)
-        if (audioCtx.state === 'suspended') {
-            audioCtx.resume();
+        // Entweder den nächsten Song aus der History holen, oder einen neuen laden
+        if (currentIndex < playedHistory.length - 1) {
+            currentIndex++;
+            loadTrackIntoUI(playedHistory[currentIndex], 'up');
+        } else {
+            if(tracks.length === 0) return;
+            const newTrack = tracks.splice(Math.floor(Math.random() * tracks.length), 1)[0];
+            playedHistory.push(newTrack);
+            currentIndex++;
+            loadTrackIntoUI(newTrack, 'up');
         }
-
-        player.src = currentTrack.previewUrl;
-        player.play();
-
-        historyData.unshift(currentTrack);
-        updateHistory();
     }
+
+    function playPrevTrack() {
+        if (isTransitioning || currentIndex <= 0) return;
+        currentIndex--;
+        loadTrackIntoUI(playedHistory[currentIndex], 'down');
+    }
+
+    function playSpecificTrack(index) {
+        if (index === currentIndex || isTransitioning) return;
+        const direction = index > currentIndex ? 'up' : 'down';
+        currentIndex = index;
+        loadTrackIntoUI(playedHistory[currentIndex], direction);
+        toggleHistory(false);
+    }
+
+    function loadTrackIntoUI(track, swipeDirection) {
+        isTransitioning = true;
+        const mainCover = document.getElementById('main-cover');
+        const infoSection = document.getElementById('info-section');
+
+        // 1. Audio sanft ausfaden
+        let vol = player.volume;
+        const fadeOut = setInterval(() => {
+            if (vol > 0.1) {
+                vol -= 0.1;
+                player.volume = vol;
+            } else {
+                clearInterval(fadeOut);
+                player.pause();
+                
+                // 2. Optischer Crossfade: Altes Bild ausblenden, Infos aktualisieren
+                mainCover.classList.add('fade-out');
+                infoSection.style.opacity = '0';
+
+                setTimeout(() => {
+                    const art = track.artworkUrl100.replace('100x100bb', '600x600bb');
+                    mainCover.src = art;
+                    
+                    document.getElementById('display-artist').innerText = track.artistName;
+                    document.getElementById('display-title').innerText = track.trackName;
+                    document.getElementById('display-album').innerText = track.collectionName;
+                    document.body.style.backgroundColor = `hsl(${Math.random() * 360}, 40%, 40%)`;
+
+                    // Audio neu starten
+                    player.src = track.previewUrl;
+                    if (audioCtx.state === 'suspended') audioCtx.resume();
+                    player.play();
+                    
+                    // 3. Optisch einblenden
+                    mainCover.classList.remove('fade-out');
+                    infoSection.style.opacity = '1';
+
+                    // Audio sanft einfaden
+                    let volIn = 0;
+                    const fadeIn = setInterval(() => {
+                        if (volIn < 0.9) {
+                            volIn += 0.1;
+                            player.volume = volIn;
+                        } else {
+                            player.volume = 1;
+                            clearInterval(fadeIn);
+                            isTransitioning = false;
+                            updateHistory();
+                        }
+                    }, 50);
+
+                }, 400); // Zeit für das Ausblenden der UI
+            }
+        }, 30); // Geschwindigkeit des Audio-Fade-Outs
+    }
+
+    // --- SWIPE LOGIC ---
+    const coverContainer = document.querySelector('.cover-container');
+    
+    document.addEventListener('touchstart', e => {
+        if (e.target.closest('#history-panel') || e.target.closest('#modal-overlay')) return;
+        startY = e.touches[0].clientY;
+    });
+
+    document.addEventListener('touchmove', e => {
+        if (isTransitioning || e.target.closest('#history-panel') || e.target.closest('#modal-overlay')) return;
+        const diff = startY - e.touches[0].clientY;
+        
+        // Parallax/Drag Effekt beim Scrollen
+        if (diff > 0) { // Nach oben wischen (Next)
+            coverContainer.style.transform = `translateY(${-diff * 0.5}px) scale(0.95)`;
+        } else { // Nach unten wischen (Prev)
+            if (currentIndex > 0) {
+                coverContainer.style.transform = `translateY(${-diff * 0.5}px) scale(0.95)`;
+            }
+        }
+    });
+
+    document.addEventListener('touchend', e => {
+        if (isTransitioning || e.target.closest('#history-panel') || e.target.closest('#modal-overlay')) return;
+        const diff = startY - e.changedTouches[0].clientY;
+        coverContainer.style.transform = 'translateY(0) scale(1)'; // Reset Position
+
+        if (diff > 80) {
+            playNextTrack(); // Swipe Up -> Next
+        } else if (diff < -80 && currentIndex > 0) {
+            playPrevTrack(); // Swipe Down -> Prev
+        }
+    });
 
     // --- INTERAKTIONEN ---
-
-    // Klick aufs Cover = Play/Pause
     function togglePlayPause() {
+        if (isTransitioning) return;
         if (player.paused) {
             player.play();
-            document.getElementById('main-cover').style.transform = "scale(1)";
+            document.querySelector('.cover-container').style.transform = "scale(1)";
         } else {
             player.pause();
-            // Leichter "eingedrückter" Effekt bei Pause
-            document.getElementById('main-cover').style.transform = "scale(0.95)"; 
+            document.querySelector('.cover-container').style.transform = "scale(0.95)"; 
         }
     }
 
-    // SWIPE LOGIC (Fühlt sich an wie TikTok)
-    document.addEventListener('touchstart', e => startY = e.touches[0].clientY);
-    document.addEventListener('touchmove', e => {
-        const diff = startY - e.touches[0].clientY;
-        // Das Bild folgt dem Finger beim nach oben wischen
-        if (diff > 0 && diff < 150) {
-            document.getElementById('main-cover').style.transform = `translateY(-${diff}px) scale(0.95)`;
-        }
-    });
-    document.addEventListener('touchend', e => {
-        const diff = startY - e.changedTouches[0].clientY;
-        if(diff > 80) {
-            // Erfolgreicher Swipe - Song wegfliegen lassen
-            document.getElementById('main-cover').style.transform = 'translateY(-100vh)';
-            setTimeout(() => {
-                document.getElementById('main-cover').style.transform = 'translateY(0)';
-                showNext();
-            }, 300);
-        } else {
-            // Swipe abgebrochen - Cover springt zurück
-            document.getElementById('main-cover').style.transform = 'translateY(0) scale(1)';
-        }
-    });
-
-    // SPOTIFY FLOW
-    function triggerSpotify() {
+    function triggerSpotify(event) {
+        event.stopPropagation(); // Verhindert, dass das Play/Pause Event ausgelöst wird
         player.pause();
         document.getElementById('modal-overlay').style.display = 'flex';
     }
@@ -333,52 +404,45 @@
     }
 
     function confirmSpotify() {
-        const url = `spotify:search:${encodeURIComponent(currentTrack.artistName + ' ' + currentTrack.trackName)}`;
+        const track = playedHistory[currentIndex];
+        const url = `spotify:search:${encodeURIComponent(track.artistName + ' ' + track.trackName)}`;
         window.open(url, '_blank');
         closeModal();
     }
 
-    // HISTORY
+    // --- HISTORY ---
     function updateHistory() {
         const list = document.getElementById('history-list');
-        list.innerHTML = historyData.map(t => `
-            <div class="history-item">
-                <img src="${t.artworkUrl100}">
-                <div style="flex:1">
-                    <b>${t.trackName}</b><br>
-                    <small>${t.artistName}</small>
+        // Wir iterieren rückwärts, damit der neueste oben ist
+        let html = '';
+        for (let i = playedHistory.length - 1; i >= 0; i--) {
+            const t = playedHistory[i];
+            const isActive = i === currentIndex ? 'active-history-item' : '';
+            html += `
+                <div class="history-item ${isActive}" onclick="playSpecificTrack(${i})">
+                    <img src="${t.artworkUrl100}">
+                    <div style="flex:1">
+                        <b>${t.trackName}</b><br>
+                        <small>${t.artistName}</small>
+                    </div>
+                    ${isActive ? '<i class="fas fa-volume-up" style="color: var(--spotify-green);"></i>' : ''}
                 </div>
-                <i class="fas fa-download" style="font-size: 20px; padding: 10px; cursor: pointer;" onclick="downloadPreview('${t.previewUrl}', '${t.trackName}')"></i>
-            </div>
-        `).join('');
+            `;
+        }
+        list.innerHTML = html;
     }
 
     function toggleHistory(show) {
         document.getElementById('history-panel').style.display = show ? 'block' : 'none';
+        if(show) updateHistory();
     }
 
-    async function downloadPreview(url, name) {
-        const blob = await fetch(url).then(r => r.blob());
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = `${name}.mp3`;
-        a.click();
-    }
-
-    // Fortschrittsbalken aktualisieren
     player.ontimeupdate = () => {
         const p = (player.currentTime / player.duration) * 100;
         document.getElementById('progress-bar').style.width = p + '%';
     };
 
-    // Automatisch nächster Song
-    player.onended = () => {
-        document.getElementById('main-cover').style.transform = 'translateY(-100vh)';
-        setTimeout(() => {
-            document.getElementById('main-cover').style.transform = 'translateY(0)';
-            showNext();
-        }, 300);
-    };
+    player.onended = playNextTrack;
 </script>
 </body>
 </html>
