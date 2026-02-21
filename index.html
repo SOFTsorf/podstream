@@ -6,7 +6,7 @@
     <meta name="apple-mobile-web-app-title" content="PodStream">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PodStream - iTunes Player</title>
+    <title>PodStream - Custom Player</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
@@ -16,9 +16,7 @@
             --ios-text: #FFFFFF;
             --ios-subtext: #8E8E93;
             --ios-separator: #38383A;
-            --glass-border: 1px solid rgba(255, 255, 255, 0.08);
-            --nav-bg: rgba(20, 20, 20, 0.7);
-            --radius-l: 32px;
+            --glass-border: 1px solid rgba(255, 255, 255, 0.1);
             --radius-m: 18px;
             --header-height: 100px;
         }
@@ -26,81 +24,76 @@
         body { 
             font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif; 
             margin: 0; background: var(--ios-bg); color: var(--ios-text); 
-            padding-bottom: 140px; overflow-x: hidden; -webkit-font-smoothing: antialiased;
-            user-select: none;
+            padding-bottom: 140px; -webkit-font-smoothing: antialiased;
         }
 
         /* HEADER */
         header { 
             position: fixed; top: 0; left: 0; width: 100%; height: var(--header-height);
             z-index: 1000; display: flex; align-items: center; padding: 0 20px; box-sizing: border-box;
-            transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
-            background: var(--ios-bg);
+            background: var(--ios-bg); transition: 0.3s;
         }
         header.scrolled { height: 70px; background: rgba(0,0,0,0.8); backdrop-filter: blur(20px); border-bottom: var(--glass-border); }
-        .logo { font-size: 34px; font-weight: 800; letter-spacing: -1px; transition: 0.4s; color: var(--ios-text); }
+        .logo { font-size: 34px; font-weight: 800; letter-spacing: -1px; }
         header.scrolled .logo { font-size: 22px; }
-
         .header-spacer { height: var(--header-height); }
 
-        /* SEARCH OVERLAY */
+        /* CUSTOM PLAYER UI */
+        #player-container {
+            margin: 20px; background: var(--ios-card); border-radius: var(--radius-m);
+            padding: 20px; border: var(--glass-border); display: none;
+            animation: fadeInUp 0.5s ease; position: relative;
+        }
+        
+        #media-wrapper { width: 100%; border-radius: 12px; overflow: hidden; background: #000; line-height: 0; }
+        video, audio { width: 100%; }
+
+        .custom-controls { margin-top: 15px; }
+        .progress-container { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+        .time { font-size: 11px; color: var(--ios-subtext); font-variant-numeric: tabular-nums; width: 35px; }
+        
+        input[type="range"] {
+            flex: 1; -webkit-appearance: none; background: #333; height: 4px; border-radius: 2px; outline: none;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none; width: 14px; height: 14px; background: white; border-radius: 50%; cursor: pointer;
+        }
+
+        .main-controls { display: flex; justify-content: center; align-items: center; gap: 30px; font-size: 24px; }
+        .play-pause-btn { width: 50px; height: 50px; background: white; color: black; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+
+        /* SEARCH & LISTS */
         .search-bar {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(10, 10, 10, 0.95); backdrop-filter: blur(40px);
+            background: rgba(10, 10, 10, 0.98); backdrop-filter: blur(40px);
             z-index: 5000; opacity: 0; pointer-events: none; transition: 0.3s; padding-top: 60px;
         }
         .search-bar.active { opacity: 1; pointer-events: auto; }
-        .search-box { display: flex; padding: 0 20px; gap: 15px; align-items: center; }
-        .input-wrap { flex: 1; background: rgba(255, 255, 255, 0.12); border-radius: 12px; display: flex; align-items: center; padding: 12px 15px; }
+        .input-wrap { flex: 1; background: rgba(255, 255, 255, 0.12); border-radius: 12px; display: flex; align-items: center; padding: 12px 15px; margin: 0 20px; }
         .input-wrap input { background: transparent; border: none; color: white; font-size: 17px; width: 100%; outline: none; margin-left: 10px; }
 
-        /* PLAYER CARD (Sticky) */
-        #player-container {
-            margin: 20px; background: var(--ios-card); border-radius: var(--radius-m);
-            padding: 15px; border: var(--glass-border); display: none;
-            animation: fadeInUp 0.5s ease;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        }
-        video, audio { width: 100%; border-radius: 12px; margin-top: 10px; background: #000; outline: none; }
-
-        /* LISTS */
-        .section-title { padding: 20px 20px 10px; font-size: 22px; font-weight: 700; color: var(--ios-text); }
-        .horizontal-scroll { display: flex; overflow-x: auto; padding: 0 20px 25px; gap: 18px; scrollbar-width: none; }
-        .horizontal-scroll::-webkit-scrollbar { display: none; }
-        
-        .card-item { width: 140px; min-width: 140px; cursor: pointer; text-align: left; }
-        .card-icon { width: 140px; height: 140px; border-radius: 22px; object-fit: cover; margin-bottom: 8px; box-shadow: 0 8px 16px rgba(0,0,0,0.4); background: #222; }
-        .card-name { font-size: 14px; font-weight: 600; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 2px; }
-
         .app-list-container { background: var(--ios-card); margin: 0 20px; border-radius: var(--radius-m); padding: 0 16px; border: var(--glass-border); }
-        .app-item { display: flex; padding: 12px 0; border-bottom: 0.5px solid var(--ios-separator); align-items: center; cursor: pointer; transition: background 0.2s; }
-        .app-item:last-child { border-bottom: none; }
-        .app-item:active { background: rgba(255,255,255,0.05); }
-        .app-icon { width: 50px; height: 50px; border-radius: 10px; margin-right: 15px; background: #222; }
+        .app-item { display: flex; padding: 14px 0; border-bottom: 0.5px solid var(--ios-separator); align-items: center; }
         .app-info { flex: 1; min-width: 0; }
-        .app-name { font-weight: 600; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 15px; }
-        .app-meta { font-size: 12px; color: var(--ios-subtext); margin-top: 2px; }
-        .play-btn { color: var(--ios-blue); font-weight: 800; font-size: 12px; background: rgba(255,255,255,0.1); padding: 6px 14px; border-radius: 20px; transition: 0.2s; }
-        .play-btn:active { background: var(--ios-blue); color: #fff; }
+        .app-name { font-weight: 600; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .app-meta { font-size: 12px; color: var(--ios-subtext); }
+        .play-btn-list { color: var(--ios-blue); font-weight: 800; font-size: 12px; background: rgba(255,255,255,0.1); padding: 6px 14px; border-radius: 20px; }
 
-        /* NAV */
+        .horizontal-scroll { display: flex; overflow-x: auto; padding: 0 20px 25px; gap: 18px; scrollbar-width: none; }
+        .card-item { width: 140px; min-width: 140px; }
+        .card-icon { width: 140px; height: 140px; border-radius: 22px; object-fit: cover; margin-bottom: 8px; box-shadow: 0 8px 16px rgba(0,0,0,0.4); }
+
         .bottom-nav {
             position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
-            width: 240px; height: 74px; background: var(--nav-bg); backdrop-filter: blur(40px) saturate(150%);
-            -webkit-backdrop-filter: blur(40px) saturate(150%);
+            width: 240px; height: 74px; background: rgba(30, 30, 30, 0.7); backdrop-filter: blur(40px);
             border-radius: 37px; display: flex; justify-content: space-evenly; align-items: center;
             z-index: 4000; border: 1px solid rgba(255,255,255,0.15);
-            box-shadow: 0 15px 35px rgba(0,0,0,0.4);
         }
-        .nav-item { color: rgba(255,255,255,0.4); text-align: center; cursor: pointer; transition: 0.3s; }
+        .nav-item { color: rgba(255,255,255,0.4); text-align: center; cursor: pointer; }
         .nav-item.active { color: #fff; }
-        .nav-item i { font-size: 22px; display: block; margin-bottom: 4px; }
-        .nav-item span { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
 
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        
-        /* Loading Spinner */
-        .loader { border: 3px solid rgba(255,255,255,0.1); border-radius: 50%; border-top: 3px solid var(--ios-blue); width: 24px; height: 24px; animation: spin 1s linear infinite; margin: 20px auto; }
+        .loader { border: 3px solid rgba(255,255,255,0.1); border-top: 3px solid var(--ios-blue); border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; margin: 20px auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
@@ -112,185 +105,206 @@
 
 <div class="header-spacer"></div>
 
-<div class="search-bar" id="search-overlay">
-    <div class="search-box">
-        <div class="input-wrap">
-            <i class="fas fa-search" style="color:var(--ios-subtext)"></i>
-            <input type="text" id="search-input" placeholder="Podcasts suchen..." onkeyup="if(event.key==='Enter') searchPodcasts()">
-        </div>
-        <span onclick="toggleSearch(false)" style="color:var(--ios-blue); cursor:pointer; font-weight: 600;">Abbrechen</span>
-    </div>
-    <div id="search-results" style="padding: 20px; overflow-y: auto; height: calc(100vh - 120px); padding-bottom: 100px;"></div>
-</div>
-
 <div id="player-container">
-    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">
-        <img id="player-art" src="" style="width: 55px; height: 55px; border-radius: 10px; background: #222; object-fit: cover;">
+    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;">
+        <img id="player-art" src="" style="width: 50px; height: 50px; border-radius: 8px; background: #333;">
         <div style="overflow: hidden; flex: 1;">
-            <div id="player-title" style="font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 16px;">Wähle eine Episode</div>
-            <div id="player-sub" style="font-size: 12px; color: var(--ios-subtext);">Wird abgespielt...</div>
+            <div id="player-title" style="font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 15px;">Titel</div>
+            <div id="player-sub" style="font-size: 12px; color: var(--ios-subtext);">PodStream Player</div>
         </div>
-        <i class="fas fa-times" onclick="document.getElementById('player-container').style.display='none'" style="opacity: 0.5; padding: 10px;"></i>
+        <i class="fas fa-chevron-down" onclick="document.getElementById('player-container').style.display='none'" style="opacity:0.5;"></i>
     </div>
-    <div id="media-wrapper"></div>
+
+    <div id="media-wrapper">
+        </div>
+
+    <div class="custom-controls">
+        <div class="progress-container">
+            <span class="time" id="current-time">0:00</span>
+            <input type="range" id="seek-bar" value="0" min="0" step="1">
+            <span class="time" id="duration">0:00</span>
+        </div>
+        <div class="main-controls">
+            <i class="fas fa-backward-step" onclick="skip(-15)"></i>
+            <div class="play-pause-btn" onclick="togglePlay()">
+                <i id="play-icon" class="fas fa-play"></i>
+            </div>
+            <i class="fas fa-forward-step" onclick="skip(15)"></i>
+        </div>
+    </div>
 </div>
 
 <div id="content-main">
-    <div class="section-title">Entdecken</div>
-    <div class="horizontal-scroll" id="trending-scroll">
-        </div>
+    <div style="padding: 20px; font-size: 22px; font-weight: 700;">Top Podcasts</div>
+    <div class="horizontal-scroll" id="trending-scroll"></div>
 
-    <div class="section-title" id="episode-header" style="display:none;">Episoden</div>
-    <div id="episode-list" class="app-list-container" style="display:none; margin-bottom: 40px;"></div>
+    <div id="episode-header" style="display:none; padding: 20px; font-size: 22px; font-weight: 700;">Episoden</div>
+    <div id="episode-list" class="app-list-container" style="display:none; margin-bottom: 50px;"></div>
+</div>
+
+<div class="search-bar" id="search-overlay">
+    <div style="display:flex; align-items:center; padding-top: 20px;">
+        <div class="input-wrap">
+            <i class="fas fa-search" style="color:var(--ios-subtext)"></i>
+            <input type="text" id="search-input" placeholder="Suchen..." onkeyup="if(event.key==='Enter') searchPodcasts()">
+        </div>
+        <span onclick="toggleSearch(false)" style="color:var(--ios-blue); padding-right:20px; cursor:pointer;">Aus</span>
+    </div>
+    <div id="search-results" style="padding: 20px; overflow-y: auto; height: 80vh;"></div>
 </div>
 
 <nav class="bottom-nav">
-    <div class="nav-item active" id="nav-home" onclick="location.reload()">
-        <i class="fas fa-house"></i>
-        <span>Entdecken</span>
-    </div>
-    <div class="nav-item" id="nav-search" onclick="toggleSearch(true)">
-        <i class="fas fa-magnifying-glass"></i>
-        <span>Suche</span>
-    </div>
+    <div class="nav-item active" onclick="location.reload()"><i class="fas fa-house"></i></div>
+    <div class="nav-item" onclick="toggleSearch(true)"><i class="fas fa-magnifying-glass"></i></div>
 </nav>
 
 <script>
-    const PROXY = "https://api.allorigins.win/get?url=";
+    const PROXIES = [
+        "https://api.allorigins.win/get?url=",
+        "https://api.codetabs.com/v1/proxy?quest="
+    ];
+
+    let currentMedia = null;
 
     function toggleSearch(show) {
         document.getElementById('search-overlay').classList.toggle('active', show);
-        if(show) {
-            document.getElementById('search-input').focus();
-            document.getElementById('nav-search').classList.add('active');
-            document.getElementById('nav-home').classList.remove('active');
-        } else {
-            document.getElementById('nav-search').classList.remove('active');
-            document.getElementById('nav-home').classList.add('active');
-        }
     }
 
     async function searchPodcasts() {
         const query = document.getElementById('search-input').value;
         const resultsBox = document.getElementById('search-results');
-        if(!query) return;
-
         resultsBox.innerHTML = '<div class="loader"></div>';
-
         try {
-            const resp = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(query)}&entity=podcast&limit=20`);
+            const resp = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(query)}&entity=podcast&limit=15`);
             const data = await resp.json();
             resultsBox.innerHTML = "";
-            
-            if(data.results.length === 0) {
-                resultsBox.innerHTML = "<p style='text-align:center; color:gray;'>Keine Ergebnisse gefunden.</p>";
-                return;
-            }
-
             data.results.forEach(p => {
                 resultsBox.innerHTML += `
                     <div class="app-item" onclick="loadEpisodes('${p.feedUrl}', '${p.artworkUrl600}')">
-                        <img src="${p.artworkUrl100}" class="app-icon" onerror="this.src='https://via.placeholder.com/100'">
+                        <img src="${p.artworkUrl100}" style="width:50px; height:50px; border-radius:8px; margin-right:15px;">
                         <div class="app-info">
                             <span class="app-name">${p.collectionName}</span>
                             <span class="app-meta">${p.artistName}</span>
                         </div>
-                        <i class="fas fa-chevron-right" style="opacity:0.3"></i>
                     </div>`;
             });
-        } catch (e) { 
-            resultsBox.innerHTML = "<p style='text-align:center;'>Fehler bei der Suche. Bitte erneut versuchen.</p>"; 
-        }
+        } catch (e) { resultsBox.innerHTML = "Fehler."; }
     }
 
     async function loadEpisodes(feedUrl, art) {
         toggleSearch(false);
         const list = document.getElementById('episode-list');
-        const header = document.getElementById('episode-header');
-        
-        header.style.display = "block";
         list.style.display = "block";
-        list.innerHTML = '<div class="loader"></div><p style="text-align:center; font-size:12px; opacity:0.5;">RSS Feed wird analysiert...</p>';
+        document.getElementById('episode-header').style.display = "block";
+        list.innerHTML = '<div class="loader"></div>';
         list.scrollIntoView({behavior: "smooth"});
 
-        try {
-            const response = await fetch(PROXY + encodeURIComponent(feedUrl));
-            const data = await response.json();
-            const xml = new DOMParser().parseFromString(data.contents, "text/xml");
-            const items = xml.querySelectorAll("item");
-
-            list.innerHTML = "";
-            if(items.length === 0) {
-                list.innerHTML = "<p style='padding:20px;'>Keine Episoden gefunden oder Feed-Format nicht unterstützt.</p>";
-                return;
-            }
-
-            items.forEach((item, i) => {
-                if(i > 30) return; // Performance Limit
-                
-                const title = item.querySelector("title")?.textContent || "Unbenannte Episode";
-                const enc = item.querySelector("enclosure");
-                if(!enc) return;
-                
-                const url = enc.getAttribute("url");
-                const type = enc.getAttribute("type") || "";
-                const isVideo = type.includes("video") || url.includes(".mp4") || url.includes(".mov");
-
-                list.innerHTML += `
-                    <div class="app-item" onclick="play('${url}', '${title.replace(/'/g, "\\'")}', ${isVideo}, '${art}')">
-                        <div class="app-info">
-                            <span class="app-name">${title}</span>
-                            <span class="app-meta">${isVideo ? '<i class="fas fa-video"></i> VIDEO' : '<i class="fas fa-headphones"></i> AUDIO'}</span>
-                        </div>
-                        <div class="play-btn">PLAY</div>
-                    </div>`;
-            });
-        } catch (e) { 
-            list.innerHTML = "<p style='padding:20px; color:#ff453a;'>Fehler beim Laden des Feeds. Der Podcast-Anbieter blockiert eventuell den Zugriff.</p>"; 
+        let xmlText = null;
+        for(let p of PROXIES) {
+            try {
+                const r = await fetch(p + encodeURIComponent(feedUrl));
+                const d = await r.json();
+                xmlText = d.contents || d;
+                if(xmlText) break;
+            } catch(e) {}
         }
+
+        if(!xmlText) { list.innerHTML = "Fehler beim Laden."; return; }
+
+        const xml = new DOMParser().parseFromString(xmlText, "text/xml");
+        const items = xml.querySelectorAll("item");
+        list.innerHTML = "";
+        items.forEach((item, i) => {
+            if(i > 30) return;
+            const title = item.querySelector("title").textContent;
+            const enc = item.querySelector("enclosure");
+            if(!enc) return;
+            const url = enc.getAttribute("url");
+            const isVideo = (enc.getAttribute("type") || "").includes("video");
+
+            list.innerHTML += `
+                <div class="app-item" onclick="initPlayer('${url}', '${title.replace(/'/g, "\\'")}', ${isVideo}, '${art}')">
+                    <div class="app-info">
+                        <span class="app-name">${title}</span>
+                        <span class="app-meta">${isVideo ? 'VIDEO' : 'AUDIO'}</span>
+                    </div>
+                    <div class="play-btn-list">START</div>
+                </div>`;
+        });
     }
 
-    function play(url, title, isVideo, art) {
+    function initPlayer(url, title, isVideo, art) {
         const container = document.getElementById('player-container');
         const wrapper = document.getElementById('media-wrapper');
         document.getElementById('player-title').innerText = title;
         document.getElementById('player-art').src = art;
-        
         container.style.display = "block";
+
+        // Erstelle Media Element ohne "controls"
         wrapper.innerHTML = isVideo ? 
-            `<video controls autoplay playsinline><source src="${url}" type="video/mp4"></video>` : 
-            `<audio controls autoplay><source src="${url}" type="audio/mpeg"></audio>`;
+            `<video id="main-media" playsinline><source src="${url}"></video>` : 
+            `<audio id="main-media"><source src="${url}"></audio>`;
+
+        currentMedia = document.getElementById('main-media');
         
+        // Event Listener für den Custom Player
+        currentMedia.addEventListener('timeupdate', updateUI);
+        currentMedia.addEventListener('loadedmetadata', () => {
+            document.getElementById('seek-bar').max = currentMedia.duration;
+            document.getElementById('duration').innerText = formatTime(currentMedia.duration);
+        });
+        
+        currentMedia.play();
+        document.getElementById('play-icon').className = "fas fa-pause";
         window.scrollTo({top: 0, behavior: 'smooth'});
     }
 
-    // Initiale Empfehlungen beim Start
-    async function init() {
-        const scroll = document.getElementById('trending-scroll');
-        const collections = ['Top Podcasts', 'Gemischt', 'Nachrichten', 'Krimi'];
-        const randomTerm = collections[Math.floor(Math.random() * collections.length)];
-        
-        try {
-            const resp = await fetch(`https://itunes.apple.com/search?term=${randomTerm}&entity=podcast&limit=10&country=de`);
-            const data = await resp.json();
-            
-            scroll.innerHTML = "";
-            data.results.forEach(p => {
-                scroll.innerHTML += `
-                    <div class="card-item" onclick="loadEpisodes('${p.feedUrl}', '${p.artworkUrl600}')">
-                        <img src="${p.artworkUrl600}" class="card-icon" onerror="this.src='https://via.placeholder.com/150'">
-                        <span class="card-name">${p.collectionName}</span>
-                    </div>`;
-            });
-        } catch (e) {
-            scroll.innerHTML = "<p>Empfehlungen konnten nicht geladen werden.</p>";
+    function togglePlay() {
+        if(!currentMedia) return;
+        if(currentMedia.paused) {
+            currentMedia.play();
+            document.getElementById('play-icon').className = "fas fa-pause";
+        } else {
+            currentMedia.pause();
+            document.getElementById('play-icon').className = "fas fa-play";
         }
     }
 
-    window.addEventListener('scroll', () => {
-        document.getElementById('main-header').classList.toggle('scrolled', window.scrollY > 20);
+    function skip(seconds) {
+        if(currentMedia) currentMedia.currentTime += seconds;
+    }
+
+    function updateUI() {
+        const seek = document.getElementById('seek-bar');
+        const current = document.getElementById('current-time');
+        seek.value = currentMedia.currentTime;
+        current.innerText = formatTime(currentMedia.currentTime);
+    }
+
+    document.getElementById('seek-bar').addEventListener('input', (e) => {
+        if(currentMedia) currentMedia.currentTime = e.target.value;
     });
 
+    function formatTime(secs) {
+        const m = Math.floor(secs / 60);
+        const s = Math.floor(secs % 60);
+        return `${m}:${s < 10 ? '0' : ''}${s}`;
+    }
+
+    async function init() {
+        const scroll = document.getElementById('trending-scroll');
+        const resp = await fetch(`https://itunes.apple.com/search?term=podcast&limit=10&country=de`);
+        const data = await resp.json();
+        data.results.forEach(p => {
+            scroll.innerHTML += `
+                <div class="card-item" onclick="loadEpisodes('${p.feedUrl}', '${p.artworkUrl600}')">
+                    <img src="${p.artworkUrl600}" class="card-icon">
+                    <span class="card-name">${p.collectionName}</span>
+                </div>`;
+        });
+    }
+
+    window.onscroll = () => document.getElementById('main-header').classList.toggle('scrolled', window.scrollY > 20);
     init();
 </script>
 
