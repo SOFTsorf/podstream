@@ -57,13 +57,17 @@
         header {
             position: absolute; top: 0; left: 0; width: 100%; height: 60px; z-index: 30;
             padding: calc(env(safe-area-inset-top) + 15px) 25px 10px; 
-            display: flex; justify-content: space-between; align-items: center;
+            display: flex; justify-content: center; align-items: center;
         }
         
         .logo-text { 
-            position: absolute; left: 50%; transform: translateX(-50%);
             font-size: 18px; font-weight: 700; letter-spacing: 0.5px; 
         }
+
+        .header-icon-left {
+            position: absolute; left: 25px; font-size: 22px; cursor: pointer; text-shadow: 0 2px 10px rgba(0,0,0,0.5); transition: transform 0.2s;
+        }
+        .header-icon-left:active { transform: scale(0.8); }
         
         .header-actions {
             position: absolute; right: 25px; display: flex; gap: 20px; align-items: center;
@@ -103,28 +107,12 @@
             transition: height 0.05s ease;
         }
 
-        /* Haupt-Player Vinyl Styling */
         .cover-container {
             position: relative; width: 75vw; max-width: 340px; aspect-ratio: 1/1;
             transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
             z-index: 10; 
         }
-        .main-vinyl-record {
-            position: absolute; top: 2%; right: -15%; width: 96%; height: 96%;
-            background: #111; border-radius: 50%; z-index: -1;
-            border: 2px solid #222;
-            background: repeating-radial-gradient(#111, #111 5px, #1a1a1a 6px, #1a1a1a 7px);
-            box-shadow: 5px 5px 20px rgba(0,0,0,0.8);
-            transition: transform 0.5s ease-out;
-            animation: spin 6s linear infinite;
-            animation-play-state: paused;
-        }
-        .main-vinyl-record::after {
-            content: ''; position: absolute; top: 50%; left: 50%;
-            transform: translate(-50%, -50%); width: 30%; height: 30%;
-            background: var(--spotify-green); border-radius: 50%;
-            border: 4px solid #000;
-        }
+        
         .cover-art {
             position: absolute; inset: 0; width: 100%; height: 100%;
             border-radius: 10px; object-fit: cover;
@@ -133,8 +121,6 @@
             z-index: 2;
         }
         .fade-out { opacity: 0 !important; }
-
-        @keyframes spin { 100% { transform: rotate(360deg); } }
 
         .feedback-icon {
             position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
@@ -229,81 +215,96 @@
             transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
         }
         .side-panel.active { transform: translateX(0); }
+        .side-panel.left-panel { transform: translateX(-100%); }
+        .side-panel.left-panel.active { transform: translateX(0); }
         
         .panel-header {
             position: absolute; top: calc(env(safe-area-inset-top) + 20px); left: 20px; right: 20px;
             display: flex; align-items: center; justify-content: center; z-index: 10;
         }
         .panel-back { position: absolute; left: 0; font-size: 24px; cursor: pointer; padding: 10px; z-index: 11; }
+        .panel-back-right { position: absolute; right: 0; font-size: 24px; cursor: pointer; padding: 10px; z-index: 11; }
         .panel-title { margin: 0; font-size: 20px; font-weight: bold; }
 
-        /* NEU: Vinyl-Stapel Design für Verlauf */
-        .vinyl-stack {
-            padding-top: 30px;
+        /* NEU: Suchfeld Styling */
+        .search-container {
+            margin-top: 15px; position: relative; width: 100%; margin-bottom: 20px;
+        }
+        .search-input {
+            width: 100%; padding: 15px 45px; border-radius: 25px; border: none;
+            background: #2a2a2a; color: white; font-size: 16px; outline: none;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.5);
+        }
+        .search-container i {
+            position: absolute; left: 18px; top: 50%; transform: translateY(-50%); color: #aaa;
+        }
+
+        /* VERBESSERTE PLATTENKISTE */
+        .vinyl-list {
+            padding-top: 10px;
             padding-bottom: 100px;
             display: flex;
             flex-direction: column;
+            gap: 12px;
         }
         .vinyl-item {
             position: relative;
-            background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
-            border-radius: 12px;
-            height: 90px;
-            margin-bottom: -35px; /* Überlappung der Platten */
+            background: #1e1e1e;
+            border-radius: 10px;
+            height: 70px;
             display: flex;
             align-items: center;
-            box-shadow: 0 -15px 25px rgba(0,0,0,0.6);
-            transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), margin-bottom 0.3s ease;
+            padding-left: 10px;
             cursor: pointer;
-            z-index: 1;
-            border-top: 1px solid rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.05);
+            transition: background 0.2s;
         }
-        .vinyl-item:hover, .vinyl-item:active {
-            transform: translateY(-15px);
-            margin-bottom: -15px;
-            z-index: 50; /* Beim Antippen nach vorne holen */
-        }
-        .vinyl-item.active-history-item {
-            z-index: 40;
-            border-left: 4px solid var(--spotify-green);
-        }
+        .vinyl-item:active { transform: scale(0.98); }
+        .vinyl-item.active-history-item { border-color: var(--spotify-green); background: #2a2a2a;}
         
         .vinyl-sleeve {
-            width: 90px; height: 90px; border-radius: 12px 0 0 12px;
+            width: 50px; height: 50px; border-radius: 6px;
             object-fit: cover; z-index: 3;
-            box-shadow: 5px 0 15px rgba(0,0,0,0.7);
+            box-shadow: 2px 0 10px rgba(0,0,0,0.5);
         }
         .vinyl-disc {
-            position: absolute; left: 45px; width: 80px; height: 80px;
+            position: absolute; left: 30px; width: 48px; height: 48px;
             border-radius: 50%; z-index: 2;
-            background: repeating-radial-gradient(#111, #111 4px, #1a1a1a 5px, #1a1a1a 6px);
+            background: repeating-radial-gradient(#111, #111 2px, #1a1a1a 3px, #1a1a1a 4px);
             border: 1px solid #333;
-            transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+            transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
         }
         .vinyl-disc::after {
             content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            width: 25px; height: 25px; background: #fff; border-radius: 50%; border: 2px solid #000;
-        }
-        .vinyl-item:hover .vinyl-disc, .vinyl-item.active-history-item .vinyl-disc {
-            transform: translateX(40px) rotate(180deg);
-        }
-        .vinyl-item.active-history-item .vinyl-disc {
-            animation: spin 4s linear infinite;
+            width: 14px; height: 14px; background: #fff; border-radius: 50%; border: 1px solid #000;
         }
         
+        /* Vinyl fährt aus und dreht sich, wenn Song aktiv ist */
+        .vinyl-item.active-history-item .vinyl-disc {
+            transform: translateX(25px);
+            animation: spin 3s linear infinite;
+        }
+        @keyframes spin { 100% { transform: translateX(25px) rotate(360deg); } }
+        
         .vinyl-info {
-            flex: 1; padding: 0 15px 0 50px; overflow: hidden; z-index: 4;
+            flex: 1; padding: 0 10px 0 45px; overflow: hidden; z-index: 4;
             display: flex; flex-direction: column; justify-content: center;
         }
-        .vinyl-info b { font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
-        .vinyl-info small { color: #ccc; font-size: 13px; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
+        .vinyl-info b { font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;}
+        .vinyl-info small { color: #aaa; font-size: 13px; }
+
+        .explicit-tag {
+            background: #aaa; color: #000; font-size: 9px; padding: 1px 4px; 
+            border-radius: 3px; font-weight: bold; margin-left: 5px; vertical-align: middle;
+        }
 
         .list-container { margin-top: 10px; }
-        .list-item { /* Altes Design für Favoriten beibehalten */
+        .list-item { 
             display: flex; align-items: center; gap: 15px; margin-bottom: 15px;
             background: #2a2a2a; padding: 10px; border-radius: 15px;
-            transition: background 0.2s;
+            transition: background 0.2s; cursor: pointer;
         }
+        .list-item:active { transform: scale(0.98); }
         .list-item img { width: 55px; height: 55px; border-radius: 10px; object-fit: cover;}
         .list-item-info { flex: 1; overflow: hidden; }
         .list-item-info b { font-size: 15px; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -314,6 +315,12 @@
         .list-btn:active { opacity: 1; transform: scale(0.9); }
         .list-btn.delete { color: #ff3b30; }
         .list-btn.play { color: var(--spotify-green); }
+
+        .loader {
+            display: none; border: 3px solid rgba(255,255,255,0.1); border-top: 3px solid var(--spotify-green);
+            border-radius: 50%; width: 24px; height: 24px; animation: loadSpin 1s linear infinite; margin: 20px auto;
+        }
+        @keyframes loadSpin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
         #modal-overlay {
             position: fixed; inset: 0; z-index: 10000;
@@ -351,9 +358,9 @@
     </div>
 
     <header>
+        <i class="fas fa-search header-icon-left" onclick="toggleSearch(true)"></i>
         <div class="logo-text">MusicBack</div>
         <div class="header-actions">
-            <i class="fas fa-share-alt header-icon" onclick="shareTrack()"></i> 
             <i class="fas fa-heart header-icon" onclick="toggleLikes(true)"></i>
             <i class="fas fa-history header-icon" onclick="toggleHistory(true)"></i>
         </div>
@@ -374,7 +381,6 @@
             </div>
             
             <div class="cover-container" id="cover-container">
-                <div class="main-vinyl-record" id="main-vinyl"></div>
                 <img id="main-cover" class="cover-art" src="" alt="">
                 <div id="feedback-icon" class="feedback-icon"><i class="fas fa-thumbs-down"></i></div>
                 <div id="big-heart-icon" class="big-heart-overlay"><i class="fas fa-heart"></i></div>
@@ -417,12 +423,27 @@
         </div>
     </div>
 
+    <div id="search-panel" class="side-panel left-panel">
+        <div class="panel-header">
+            <h2 class="panel-title">Suche</h2>
+            <i class="fas fa-times panel-back-right" onclick="toggleSearch(false)"></i>
+        </div>
+        <div class="search-container">
+            <i class="fas fa-search"></i>
+            <input type="text" id="search-input" class="search-input" placeholder="Songs, Künstler suchen..." onkeypress="handleSearch(event)">
+        </div>
+        <div id="search-loader" class="loader"></div>
+        <div id="search-results" class="list-container">
+            <p style="text-align:center; color:#aaa; font-size:14px; margin-top:30px;">Tippe etwas ein und drücke Enter (oder Suchen auf der Tastatur).</p>
+        </div>
+    </div>
+
     <div id="history-panel" class="side-panel">
         <div class="panel-header">
             <i class="fas fa-chevron-left panel-back" onclick="toggleHistory(false)"></i>
             <h2 class="panel-title">Plattenkiste</h2>
         </div>
-        <div id="history-list" class="vinyl-stack"></div>
+        <div id="history-list" class="vinyl-list"></div>
     </div>
 
     <div id="likes-panel" class="side-panel">
@@ -440,7 +461,6 @@
     const allBars = document.querySelectorAll('.bar');
     const coverContainer = document.getElementById('cover-container');
     const mainCoverImg = document.getElementById('main-cover');
-    const mainVinyl = document.getElementById('main-vinyl');
     const likeBtn = document.getElementById('like-btn');
     
     // State
@@ -451,7 +471,7 @@
     let isTransitioning = false;
     
     // History & Blacklist
-    let globalPlayedIds = new Set(); // Speichert ALLE jemals gespielten Tracks, um Wiederholungen zu vermeiden
+    let globalPlayedIds = new Set(); 
     let dislikedArtists = new Set(); 
 
     // Swipe State
@@ -494,11 +514,8 @@
             navigator.mediaSession.setActionHandler('previoustrack', playPrevTrack);
             navigator.mediaSession.setActionHandler('nexttrack', playNextTrack);
             navigator.mediaSession.setActionHandler('seekto', (details) => {
-                if (details.fastSeek && 'fastSeek' in player) {
-                  player.fastSeek(details.seekTime);
-                } else {
-                  player.currentTime = details.seekTime;
-                }
+                if (details.fastSeek && 'fastSeek' in player) player.fastSeek(details.seekTime);
+                else player.currentTime = details.seekTime;
             });
         }
     }
@@ -506,7 +523,6 @@
     function updateMediaSessionState() {
         if ('mediaSession' in navigator) {
             navigator.mediaSession.playbackState = player.paused ? 'paused' : 'playing';
-            mainVinyl.style.animationPlayState = player.paused ? 'paused' : 'running';
         }
     }
 
@@ -515,7 +531,6 @@
             const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(searchTerm)}&entity=song&limit=200&country=DE`);
             const data = await res.json();
             
-            // Erweiterte Blacklist für Weihnachts- & Feiertagsmusik
             const unwantedKeywords = ['christmas', 'xmas', 'holiday', 'weihnacht', 'weihnachten', 'santa', 'snow', 'jingle', 'claus', 'navidad', 'merry', 'winter', 'bollywood', 'indian', 'hindi'];
             
             tracks = data.results.filter(t => {
@@ -533,6 +548,60 @@
         }
     }
 
+    async function handleSearch(e) {
+        if (e.key === 'Enter') {
+            const query = e.target.value.trim();
+            if(!query) return;
+            
+            // Tastatur ausblenden (Mobile)
+            document.getElementById('search-input').blur();
+            
+            const resultsContainer = document.getElementById('search-results');
+            const loader = document.getElementById('search-loader');
+            
+            resultsContainer.innerHTML = '';
+            loader.style.display = 'block';
+
+            try {
+                const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(query)}&entity=song&limit=40&country=DE`);
+                const data = await res.json();
+                loader.style.display = 'none';
+                
+                const validResults = data.results.filter(t => t.previewUrl);
+                
+                if(validResults.length === 0) {
+                    resultsContainer.innerHTML = '<p style="text-align:center; color:#aaa;">Keine Ergebnisse gefunden.</p>';
+                    return;
+                }
+
+                let html = '';
+                validResults.forEach(t => {
+                    const explicitTag = t.trackExplicitness === 'explicit' ? '<span class="explicit-tag">E</span>' : '';
+                    html += `
+                        <div class="list-item" onclick='playSearchResult(${JSON.stringify(t).replace(/'/g, "&#39;")})'>
+                            <img src="${t.artworkUrl100}">
+                            <div class="list-item-info">
+                                <b>${t.trackName} ${explicitTag}</b>
+                                <small>${t.artistName}</small>
+                            </div>
+                        </div>
+                    `;
+                });
+                resultsContainer.innerHTML = html;
+                
+            } catch(err) {
+                loader.style.display = 'none';
+                resultsContainer.innerHTML = '<p style="text-align:center; color:#ff3b30;">Fehler bei der Suche.</p>';
+            }
+        }
+    }
+
+    function playSearchResult(track) {
+        // Schließe Such-Panel
+        toggleSearch(false);
+        playSpecificTrack(track);
+    }
+
     async function changeCategory(category, btnElement) {
         if(isTransitioning) return;
         
@@ -545,7 +614,6 @@
         player.pause();
         isTransitioning = true;
         
-        // playedHistory behalten wir für den Verlauf, aber wir laden neue Tracks
         currentIndex = playedHistory.length - 1; 
         
         await loadMusic(category);
@@ -584,13 +652,11 @@
             if(tracks.length === 0) return;
             isTransitioning = false; 
             
-            // Filtere Songs raus, die in dieser Session schon liefen oder deren Artist gedisliked wurde
             let availableTracks = tracks.filter(t => 
                 !globalPlayedIds.has(t.trackId) && 
                 !dislikedArtists.has(t.artistName) 
             );
             
-            // Wenn alle Songs der Liste gespielt wurden, Set zurücksetzen (außer Dislikes)
             if (availableTracks.length === 0) {
                 globalPlayedIds.clear(); 
                 availableTracks = tracks.filter(t => !dislikedArtists.has(t.artistName));
@@ -620,6 +686,7 @@
         if (index !== -1) {
             currentIndex = index;
         } else {
+            globalPlayedIds.add(track.trackId);
             playedHistory.push(track);
             currentIndex = playedHistory.length - 1;
         }
@@ -638,7 +705,7 @@
         
         setTimeout(() => {
             if (el.scrollWidth > container.clientWidth) {
-                el.innerHTML = `${text} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${text}`;
+                el.innerHTML = `${text}        ${text}`;
                 el.classList.add('marquee-active');
             }
         }, 50);
@@ -657,7 +724,6 @@
             likeBtn.classList.replace('fas', 'far');
         }
 
-        // Media Session API Updaten
         if ('mediaSession' in navigator) {
             navigator.mediaSession.metadata = new MediaMetadata({
                 title: track.trackName,
@@ -680,7 +746,6 @@
                 player.pause();
                 
                 mainCoverImg.classList.add('fade-out');
-                mainVinyl.style.opacity = '0';
                 infoSection.style.opacity = '0';
 
                 setTimeout(() => {
@@ -690,7 +755,8 @@
                     
                     document.getElementById('display-top-artist').innerText = track.artistName;
                     
-                    applyMarquee('display-title', track.trackName);
+                    const explicitTag = track.trackExplicitness === 'explicit' ? '<span class="explicit-tag">E</span>' : '';
+                    applyMarquee('display-title', `${track.trackName} ${explicitTag}`);
                     applyMarquee('display-artist', track.artistName);
 
                     player.src = track.previewUrl;
@@ -698,10 +764,11 @@
                     
                     player.play().then(() => {
                         updateMediaSessionState();
+                        // Wenn History offen ist, Animation triggern
+                        if(document.getElementById('history-panel').classList.contains('active')) renderHistory();
                     }).catch(e => console.log("Autoplay blockiert", e));
                     
                     mainCoverImg.classList.remove('fade-out');
-                    mainVinyl.style.opacity = '1';
                     infoSection.style.opacity = '1';
 
                     let volIn = 0;
@@ -858,42 +925,40 @@
         }
     }
 
-    async function shareTrack() {
+    function shareTrack() {
         if (currentIndex === -1) return;
         const track = playedHistory[currentIndex];
         const spotifySearchUrl = `https://open.spotify.com/search/${encodeURIComponent(track.artistName + ' ' + track.trackName)}`;
         
         if (navigator.share) {
-            try {
-                await navigator.share({
-                    title: track.trackName,
-                    text: `Hör dir ${track.trackName} von ${track.artistName} an!`,
-                    url: spotifySearchUrl 
-                });
-            } catch (err) {
-                console.log('Teilen abgebrochen', err);
-            }
+            navigator.share({
+                title: track.trackName,
+                text: `Hör dir ${track.trackName} von ${track.artistName} an!`,
+                url: spotifySearchUrl 
+            }).catch(err => console.log('Teilen abgebrochen', err));
         } else {
             alert("Teilen wird auf diesem Gerät leider nicht unterstützt.");
         }
     }
 
-    // NEU: Vinyl-Stapel Render-Funktion
+    // REDESIGN: Plattenkiste (Verlauf)
     function renderHistory() {
         const list = document.getElementById('history-list');
         let html = '';
         
-        // Rendert von Alt (oben) nach Neu (unten) oder umgekehrt - hier von Neu nach Alt
         for (let i = playedHistory.length - 1; i >= 0; i--) {
             const t = playedHistory[i];
-            const isActive = i === currentIndex ? 'active-history-item' : '';
-            
+            // Wir schauen, ob der Track aktiv ist und ob er nicht pausiert ist (für die Rotation)
+            const isPlayingNow = (i === currentIndex && !player.paused);
+            const isActiveClass = isPlayingNow ? 'active-history-item' : '';
+            const explicitTag = t.trackExplicitness === 'explicit' ? '<span class="explicit-tag">E</span>' : '';
+
             html += `
-                <div class="vinyl-item ${isActive}" onclick='playSpecificTrack(${JSON.stringify(t).replace(/'/g, "&apos;")})'>
+                <div class="vinyl-item ${isActiveClass}" onclick='playSpecificTrack(${JSON.stringify(t).replace(/'/g, "&#39;")})'>
                     <div class="vinyl-disc"></div>
                     <img class="vinyl-sleeve" src="${t.artworkUrl100}">
                     <div class="vinyl-info">
-                        <b>${t.trackName}</b>
+                        <b>${t.trackName} ${explicitTag}</b>
                         <small>${t.artistName}</small>
                     </div>
                 </div>
@@ -908,18 +973,18 @@
         const tracksArray = Array.from(likedTracks.values()).reverse();
         
         tracksArray.forEach(t => {
+            const explicitTag = t.trackExplicitness === 'explicit' ? '<span class="explicit-tag">E</span>' : '';
             const safeTrackName = t.trackName.replace(/'/g, ""); 
             const safeArtistName = t.artistName.replace(/'/g, "");
 
             html += `
                 <div class="list-item">
-                    <img src="${t.artworkUrl100}">
-                    <div class="list-item-info">
-                        <b>${t.trackName}</b>
+                    <img src="${t.artworkUrl100}" onclick='playSpecificTrack(${JSON.stringify(t).replace(/'/g, "&#39;")})'>
+                    <div class="list-item-info" onclick='playSpecificTrack(${JSON.stringify(t).replace(/'/g, "&#39;")})'>
+                        <b>${t.trackName} ${explicitTag}</b>
                         <small>${t.artistName}</small>
                     </div>
                     <div class="list-actions">
-                        <i class="fas fa-play list-btn play" onclick='playSpecificTrack(${JSON.stringify(t).replace(/'/g, "&apos;")})'></i>
                         <i class="fas fa-download list-btn" onclick="downloadSong('${t.previewUrl}', '${safeArtistName} - ${safeTrackName}')"></i>
                         <i class="fas fa-trash list-btn delete" onclick="removeFromLikes(${t.trackId})"></i>
                     </div>
@@ -927,6 +992,16 @@
             `;
         });
         list.innerHTML = html || '<p style="text-align:center; color:#aaa; margin-top:30px;">Noch keine Favoriten.</p>';
+    }
+
+    function toggleSearch(show) {
+        const panel = document.getElementById('search-panel');
+        if(show) { 
+            panel.classList.add('active'); 
+            setTimeout(() => document.getElementById('search-input').focus(), 300);
+        } else { 
+            panel.classList.remove('active'); 
+        }
     }
 
     function toggleHistory(show) {
@@ -985,7 +1060,6 @@
         document.getElementById('progress-bar').style.width = p + '%';
         document.getElementById('time-display').innerText = `${formatTime(player.currentTime)} / ${formatTime(player.duration)}`;
         
-        // Synchronisiere Fortschritt mit Sperrbildschirm/Media Session
         if ('mediaSession' in navigator && navigator.mediaSession.setPositionState) {
             try {
                 navigator.mediaSession.setPositionState({
@@ -999,9 +1073,15 @@
 
     player.onended = playNextTrack;
     
-    // Play/Pause Listener für Media Session Synchronisation
-    player.addEventListener('play', updateMediaSessionState);
-    player.addEventListener('pause', updateMediaSessionState);
+    // Play/Pause Listener für Media Session Synchronisation & Verlauf-Animation
+    player.addEventListener('play', () => {
+        updateMediaSessionState();
+        if(document.getElementById('history-panel').classList.contains('active')) renderHistory();
+    });
+    player.addEventListener('pause', () => {
+        updateMediaSessionState();
+        if(document.getElementById('history-panel').classList.contains('active')) renderHistory();
+    });
 </script>
 </body>
 </html>
