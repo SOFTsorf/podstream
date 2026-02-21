@@ -95,10 +95,11 @@
         .category-pill.active { background: var(--spotify-green); color: black; }
 
         #feed-container {
-            height: 100dvh; width: 100vw; display: flex; flex-direction: column;
-            align-items: center; justify-content: center; position: relative;
-            /* GEFIXT: z-index entfernt, damit Elemente durchgreifen können */
-        }
+    height: 100dvh; width: 100vw; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; position: relative;
+    z-index: 10; /* Z-Index wieder hinzugefügt! */
+}
+
 
         .visualizer-wrapper {
             display: flex; align-items: center; gap: 20px; width: 100%; justify-content: center;
