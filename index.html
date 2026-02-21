@@ -1,291 +1,359 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="PodStream">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PodStream</title>
-
+    <title>PodStream Pro</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* DEINE ORIGINALEN VARS & DESIGNS */
         :root {
-            --ios-bg: #000000;
+            --ios-bg: #000;
             --ios-card: #1C1C1E;
             --ios-blue: #0A84FF;
-            --ios-text: #FFFFFF;
-            --ios-subtext: #8E8E93;
-            --ios-separator: #38383A;
-            --glass-border: 1px solid rgba(255, 255, 255, 0.08);
-            --nav-bg: rgba(20, 20, 20, 0.5);
-            --nav-item: rgba(255,255,255,0.5);
-            --nav-active: #FFF;
-            --radius-l: 32px;
-            --radius-m: 18px;
-            --header-height: 100px;
+            --text-main: #FFFFFF;
+            --text-sub: #8E8E93;
+            --glass: rgba(255, 255, 255, 0.1);
         }
 
-        body { 
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif; 
-            margin: 0; background: var(--ios-bg); color: var(--ios-text); 
-            padding-bottom: 120px; overflow-x: hidden; -webkit-font-smoothing: antialiased;
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+            background: var(--ios-bg);
+            color: var(--text-main);
+            margin: 0;
+            padding-bottom: 100px;
+            overflow-x: hidden;
         }
 
-        /* ANIMATIONS */
-        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes scrollText { 0% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
-        .animate-entry { opacity: 0; animation: fadeInUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
-        .delay-1 { animation-delay: 0.1s; }
-
-        /* HEADER & STICKY */
-        header { 
-            position: fixed; top: 0; left: 0; width: 100%; height: var(--header-height);
-            z-index: 1000; display: flex; align-items: center; padding: 0 20px; box-sizing: border-box;
-            transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+        /* --- HEADER & NAVIGATION --- */
+        header {
+            padding: 60px 20px 20px;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent);
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
-        .header-blur-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-size: cover; filter: blur(25px) brightness(0.4); opacity: 0; transition: opacity 0.5s; z-index: 1; }
-        .logo { font-size: 34px; font-weight: 800; position: relative; z-index: 2; transition: 0.4s; }
+
+        .logo { font-size: 34px; font-weight: 800; letter-spacing: -1px; }
+
+        /* --- CONTENT CARDS --- */
+        .section-title { padding: 20px; font-size: 22px; font-weight: 700; }
         
-        header.scrolled { height: 70px; background: rgba(0,0,0,0.3); border-bottom: var(--glass-border); }
-        header.scrolled .logo { opacity: 0; transform: translateY(-20px); }
-        header.scrolled .header-blur-bg { opacity: 1; }
-
-        .sticky-app-bar {
-            position: absolute; left: 0; top: 0; width: 100%; height: 100%;
-            display: flex; align-items: center; padding: 0 20px; box-sizing: border-box;
-            z-index: 3; opacity: 0; transform: translateY(20px); transition: 0.4s; pointer-events: none;
+        .horizontal-scroll {
+            display: flex;
+            overflow-x: auto;
+            padding: 0 20px;
+            gap: 15px;
+            scroll-snap-type: x mandatory;
         }
-        header.scrolled .sticky-app-bar { opacity: 1; transform: translateY(0); pointer-events: auto; }
-        .sticky-icon { width: 38px; height: 38px; border-radius: 8px; margin-right: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
 
-        /* PLAYER POPUP */
-        .player-popup {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--ios-bg); z-index: 9000; display: none;
-            flex-direction: column; align-items: center; padding: 60px 20px; box-sizing: border-box;
-            animation: fadeInUp 0.5s ease;
+        .card {
+            min-width: 160px;
+            scroll-snap-align: start;
         }
-        .player-popup.active { display: flex; }
-        .pop-art { width: 80vw; height: 80vw; max-width: 300px; border-radius: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.5); margin-bottom: 30px; }
-        
-        /* CONTENT DESIGN */
-        .category-scroll { display: flex; overflow-x: auto; padding: 10px 20px; gap: 10px; scrollbar-width: none; }
-        .cat-pill { background: rgba(255,255,255,0.08); padding: 8px 18px; border-radius: 20px; font-size: 14px; white-space: nowrap; }
-        .cat-pill.active { background: var(--ios-blue); }
 
-        .featured-banner { margin: 20px; border-radius: var(--radius-l); height: 400px; position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; padding: 30px; box-sizing: border-box; border: var(--glass-border); }
-        .featured-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-size: cover !important; z-index: -1; filter: brightness(0.6); }
-
-        .horizontal-scroll { display: flex; overflow-x: auto; padding: 0 20px 20px; gap: 18px; }
-        .card-item { width: 120px; min-width: 120px; }
-        .card-icon { width: 120px; height: 120px; border-radius: 26px; object-fit: cover; border: var(--glass-border); margin-bottom: 8px; }
-
-        .app-list-container { background: var(--ios-card); margin: 0 20px; border-radius: var(--radius-m); padding: 0 16px; border: var(--glass-border); }
-        .app-item { display: flex; padding: 15px 0; border-bottom: 0.5px solid var(--ios-separator); align-items: center; }
-        .app-item:last-child { border-bottom: none; }
-        .app-icon { width: 62px; height: 62px; border-radius: 14px; margin-right: 15px; }
-        .laden-badge { background: #333; color: var(--ios-blue); padding: 6px 18px; border-radius: 20px; font-weight: 800; font-size: 12px; }
-
-        /* NAV */
-        .bottom-nav {
-            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
-            width: 240px; height: 74px; background: var(--nav-bg); backdrop-filter: blur(50px);
-            border-radius: 37px; display: flex; justify-content: space-evenly; align-items: center;
-            z-index: 4000; border: 1px solid rgba(255,255,255,0.15); transition: 0.4s;
+        .card img {
+            width: 160px;
+            height: 160px;
+            border-radius: 22px;
+            object-fit: cover;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+            background: #2c2c2e;
         }
-        .bottom-nav.nav-scrolled { width: 140px; height: 52px; bottom: 20px; }
-        .nav-item { color: var(--nav-item); text-align: center; }
-        .nav-item.active { color: var(--ios-blue); }
-        .nav-item i { font-size: 24px; display: block; }
-        .nav-item span { font-size: 10px; font-weight: 600; text-transform: uppercase; }
-        .nav-scrolled span { display: none; }
 
-        /* SEARCH BAR */
-        .search-bar { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(10,10,10,0.8); backdrop-filter: blur(40px); z-index: 5000; display: none; padding-top: 60px; }
-        .search-box { display: flex; align-items: center; padding: 0 20px; gap: 15px; }
-        .input-wrap { flex: 1; background: rgba(255,255,255,0.1); border-radius: 12px; display: flex; align-items: center; padding: 12px; }
-        .input-wrap input { background: transparent; border: none; color: white; width: 100%; outline: none; margin-left: 10px; font-size: 17px; }
+        .card-title {
+            margin-top: 10px;
+            font-size: 14px;
+            font-weight: 500;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
 
-        /* MISC */
-        .loader { border: 3px solid rgba(255,255,255,0.1); border-top: 3px solid var(--ios-blue); border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; margin: 20px auto; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        /* --- EPISODEN LISTE (DownAPK Style) --- */
+        .list-container {
+            margin: 20px;
+            background: var(--ios-card);
+            border-radius: 20px;
+            padding: 10px 15px;
+        }
+
+        .list-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 0.5px solid #38383A;
+        }
+
+        .list-item:last-child { border-bottom: none; }
+
+        .list-info { flex: 1; margin-right: 10px; }
+        .list-info h4 { margin: 0; font-size: 15px; font-weight: 600; }
+        .list-info p { margin: 4px 0 0; font-size: 12px; color: var(--text-sub); }
+
+        .btn-play {
+            background: #333;
+            color: var(--ios-blue);
+            border: none;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 13px;
+        }
+
+        /* --- DER NEUE iOS PLAYER (Full Screen) --- */
+        #player-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            z-index: 1000;
+            display: none;
+            flex-direction: column;
+            transition: transform 0.4s cubic-bezier(0.1, 0.7, 0.1, 1);
+            transform: translateY(100%);
+        }
+
+        #player-overlay.active { display: flex; transform: translateY(0); }
+
+        .player-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            filter: blur(40px) brightness(0.5);
+            z-index: -1;
+            transform: scale(1.2);
+        }
+
+        .player-header { padding: 20px; display: flex; justify-content: space-between; align-items: center; }
+
+        .player-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 0 40px;
+        }
+
+        .main-art {
+            width: 85vw;
+            height: 85vw;
+            max-width: 320px;
+            max-height: 320px;
+            border-radius: 20px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            margin-bottom: 40px;
+        }
+
+        .track-info { width: 100%; text-align: left; margin-bottom: 30px; }
+        .track-info h2 { margin: 0; font-size: 22px; font-weight: 700; }
+        .track-info p { margin: 5px 0 0; color: var(--ios-blue); font-size: 18px; }
+
+        /* iOS Slider */
+        .progress-area { width: 100%; margin-bottom: 30px; }
+        input[type="range"] {
+            width: 100%;
+            accent-color: #fff;
+            height: 4px;
+            border-radius: 2px;
+            outline: none;
+        }
+
+        .time-labels { display: flex; justify-content: space-between; font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 10px; }
+
+        .player-controls {
+            display: flex;
+            width: 100%;
+            justify-content: space-around;
+            align-items: center;
+            margin-bottom: 50px;
+        }
+
+        .player-controls i { font-size: 35px; cursor: pointer; transition: 0.2s; }
+        .player-controls i:active { opacity: 0.5; }
+        .play-trigger { font-size: 60px !important; }
+
+        /* SEARCH */
+        .search-bar {
+            margin: 0 20px 20px;
+            background: var(--ios-card);
+            border-radius: 12px;
+            padding: 10px 15px;
+            display: flex;
+            align-items: center;
+        }
+        .search-bar input {
+            background: transparent;
+            border: none;
+            color: #fff;
+            margin-left: 10px;
+            font-size: 17px;
+            width: 100%;
+            outline: none;
+        }
+
+        .loader { width: 30px; height: 30px; border: 3px solid var(--glass); border-top-color: var(--ios-blue); border-radius: 50%; animation: spin 1s infinite linear; margin: 20px auto; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
     </style>
 </head>
 <body>
 
-<div id="player-popup" class="player-popup">
-    <i class="fas fa-chevron-down" style="font-size: 24px; opacity: 0.5; margin-bottom: 20px;" onclick="togglePlayer(false)"></i>
-    <img id="pop-art" src="" class="pop-art">
-    <h2 id="pop-title" style="text-align: center; margin: 0 20px 5px;">Titel der Episode</h2>
-    <p id="pop-author" style="color: var(--ios-blue); margin-bottom: 30px;">Podcast Name</p>
-    
-    <div style="width: 100%; padding: 0 30px; box-sizing: border-box;">
-        <input type="range" id="pop-seek" style="width: 100%; accent-color: white;" value="0">
-        <div style="display: flex; justify-content: space-between; font-size: 12px; opacity: 0.5; margin-top: 5px;">
-            <span id="time-cur">0:00</span>
-            <span id="time-dur">0:00</span>
+    <header>
+        <div class="logo">Podcasts</div>
+    </header>
+
+    <div class="search-bar">
+        <i class="fas fa-search" style="color: #8e8e93;"></i>
+        <input type="text" id="searchInput" placeholder="Suchen..." onkeyup="if(event.key==='Enter') searchPodcasts()">
+    </div>
+
+    <div id="main-view">
+        <div class="section-title">Für dich entdeckt</div>
+        <div class="horizontal-scroll" id="trending-grid">
+            </div>
+
+        <div id="episode-section" style="display:none;">
+            <div class="section-title" id="feed-title">Episoden</div>
+            <div class="list-container" id="episode-list"></div>
         </div>
     </div>
 
-    <div style="display: flex; align-items: center; gap: 40px; margin-top: 40px;">
-        <i class="fas fa-backward-step" style="font-size: 30px;" onclick="skip(-15)"></i>
-        <i id="pop-play" class="fas fa-play" style="font-size: 50px;" onclick="togglePlay()"></i>
-        <i class="fas fa-forward-step" style="font-size: 30px;" onclick="skip(30)"></i>
+    <div id="player-overlay">
+        <div class="player-bg" id="p-bg"></div>
+        <div class="player-header">
+            <i class="fas fa-chevron-down" onclick="togglePlayer(false)"></i>
+            <span style="font-size: 12px; font-weight: 600; opacity: 0.7;">JETZT LÄUFT</span>
+            <i class="fas fa-ellipsis-h"></i>
+        </div>
+
+        <div class="player-content">
+            <img src="" id="p-art" class="main-art">
+            <div class="track-info">
+                <h2 id="p-title">Titel der Episode</h2>
+                <p id="p-author">Podcast Name</p>
+            </div>
+
+            <div class="progress-area">
+                <input type="range" id="p-seek" value="0" step="1">
+                <div class="time-labels">
+                    <span id="p-current">0:00</span>
+                    <span id="p-duration">0:00</span>
+                </div>
+            </div>
+
+            <div class="player-controls">
+                <i class="fas fa-backward-step" onclick="skip(-15)"></i>
+                <i class="fas fa-play play-trigger" id="p-main-btn" onclick="togglePlay()"></i>
+                <i class="fas fa-forward-step" onclick="skip(30)"></i>
+            </div>
+        </div>
     </div>
+
     <audio id="audio-engine"></audio>
-</div>
-
-<div id="search-overlay" class="search-bar">
-    <div class="search-box">
-        <div class="input-wrap">
-            <i class="fas fa-search" style="color:var(--ios-subtext)"></i>
-            <input type="text" id="search-input" placeholder="Podcasts suchen..." onkeyup="if(event.key==='Enter') searchPodcasts()">
-        </div>
-        <span onclick="toggleSearch(false)" style="color:var(--ios-blue); cursor:pointer">Abbrechen</span>
-    </div>
-    <div id="search-results" style="margin-top:20px; max-height: 80vh; overflow-y: auto;"></div>
-</div>
-
-<header id="main-header">
-    <div class="header-blur-bg" id="header-blur"></div>
-    <div class="logo">PodStream</div>
-    
-    <div class="sticky-app-bar" onclick="togglePlayer(true)">
-        <img id="sticky-icon" src="" class="sticky-icon" onerror="this.src='https://via.placeholder.com/100'">
-        <div style="flex:1; overflow:hidden">
-            <span id="sticky-name" style="font-weight:600; font-size:15px; display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis">Nichts läuft</span>
-            <span style="font-size:11px; opacity:0.7">JETZT HÖREN</span>
-        </div>
-        <button class="laden-badge" style="background: rgba(255,255,255,0.2); color: white;">ÖFFNEN</button>
-    </div>
-</header>
-
-<div style="height:100px"></div>
-
-<div id="content-main">
-    <div class="category-scroll animate-entry">
-        <div class="cat-pill active">Alle</div>
-        <div class="cat-pill">Wissen</div>
-        <div class="cat-pill">True Crime</div>
-        <div class="cat-pill">Comedy</div>
-    </div>
-
-    <div id="featured-hero" class="animate-entry delay-1"></div>
-
-    <div style="padding: 20px; font-size: 22px; font-weight: 700;">Angesagt</div>
-    <div class="horizontal-scroll" id="scroll-trending"></div>
-
-    <div id="episode-header" style="padding: 20px; font-size: 22px; font-weight: 700; display:none;">Episoden</div>
-    <div id="episode-list" class="app-list-container" style="display:none;"></div>
-</div>
-
-<nav class="bottom-nav">
-    <div class="nav-item active" onclick="location.reload()">
-        <i class="fas fa-house"></i>
-        <span>Home</span>
-    </div>
-    <div class="nav-item" onclick="toggleSearch(true)">
-        <i class="fas fa-magnifying-glass"></i>
-        <span>Suche</span>
-    </div>
-</nav>
 
 <script>
     const audio = document.getElementById('audio-engine');
-    let currentArt = "";
-
-    function toggleSearch(show) {
-        document.getElementById('search-overlay').style.display = show ? 'block' : 'none';
-        if(show) document.getElementById('search-input').focus();
-    }
-
-    function togglePlayer(show) {
-        document.getElementById('player-popup').classList.toggle('active', show);
-    }
-
+    const player = document.getElementById('player-overlay');
+    
+    // --- API FUNKTIONEN ---
     async function searchPodcasts() {
-        const query = document.getElementById('search-input').value;
-        const results = document.getElementById('search-results');
-        results.innerHTML = '<div class="loader"></div>';
+        const query = document.getElementById('searchInput').value;
+        if(!query) return;
+        
+        const grid = document.getElementById('trending-grid');
+        grid.innerHTML = '<div class="loader"></div>';
+
         try {
-            const r = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(query)}&entity=podcast&limit=15`);
+            const r = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(query)}&entity=podcast&limit=10`);
             const data = await r.json();
-            results.innerHTML = "";
+            grid.innerHTML = "";
             data.results.forEach(p => {
-                results.innerHTML += `
-                    <div class="app-item" style="margin: 0 20px" onclick="loadEpisodes('${p.feedUrl}', '${p.artworkUrl600}', '${p.collectionName}')">
-                        <img src="${p.artworkUrl100}" class="sticky-icon">
-                        <div style="flex:1">
-                            <div style="font-weight:600">${p.collectionName}</div>
-                            <div style="font-size:12px; color:var(--ios-subtext)">${p.artistName}</div>
-                        </div>
+                grid.innerHTML += `
+                    <div class="card" onclick="loadFeed('${p.feedUrl}', '${p.artworkUrl600}', '${p.collectionName}')">
+                        <img src="${p.artworkUrl600}" onerror="this.src='https://via.placeholder.com/160'">
+                        <div class="card-title">${p.collectionName}</div>
                     </div>`;
             });
-        } catch(e) { results.innerHTML = "Suche fehlgeschlagen."; }
+        } catch (e) { alert("Fehler beim Suchen."); }
     }
 
-    async function loadEpisodes(feedUrl, art, author) {
-        toggleSearch(false);
+    async function loadFeed(url, art, name) {
         const list = document.getElementById('episode-list');
-        const header = document.getElementById('episode-header');
-        list.style.display = "block"; header.style.display = "block";
+        document.getElementById('episode-section').style.display = "block";
+        document.getElementById('feed-title').innerText = name;
         list.innerHTML = '<div class="loader"></div>';
         list.scrollIntoView({behavior: 'smooth'});
 
         try {
-            const r = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(feedUrl)}`);
-            const d = await r.json();
-            const xml = new DOMParser().parseFromString(d.contents, "text/xml");
+            const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`);
+            const json = await res.json();
+            const parser = new DOMParser();
+            const xml = parser.parseFromString(json.contents, "text/xml");
             const items = xml.querySelectorAll("item");
-            list.innerHTML = "";
-            currentArt = art;
             
+            list.innerHTML = "";
             items.forEach((item, i) => {
-                if(i > 15) return;
+                if(i > 20) return;
                 const title = item.querySelector("title").textContent;
                 const mp3 = item.querySelector("enclosure").getAttribute("url");
                 list.innerHTML += `
-                    <div class="app-item animate-entry" onclick="playMedia('${mp3}', '${title.replace(/'/g, "")}', '${art}', '${author}')">
-                        <div style="flex:1">
-                            <div style="font-weight:600; font-size:15px">${title}</div>
-                            <div style="font-size:12px; color:var(--ios-subtext)">Audio Episode</div>
+                    <div class="list-item" onclick="initPlayer('${mp3}', '${title.replace(/'/g, "")}', '${art}', '${name}')">
+                        <div class="list-info">
+                            <h4>${title}</h4>
+                            <p>Episode • Podcast</p>
                         </div>
-                        <div class="laden-badge">HÖREN</div>
+                        <button class="btn-play">HÖREN</button>
                     </div>`;
             });
-        } catch(e) { list.innerHTML = "Fehler beim Laden des Feeds."; }
+        } catch(e) { list.innerHTML = "Feed konnte nicht geladen werden."; }
     }
 
-    function playMedia(url, title, art, author) {
+    // --- PLAYER LOGIK ---
+    function initPlayer(url, title, art, author) {
         audio.src = url;
         audio.play();
-        document.getElementById('pop-title').innerText = title;
-        document.getElementById('pop-author').innerText = author;
-        document.getElementById('pop-art').src = art;
-        document.getElementById('sticky-icon').src = art;
-        document.getElementById('sticky-name').innerText = title;
-        document.getElementById('header-blur').style.backgroundImage = `url(${art})`;
-        document.getElementById('pop-play').className = "fas fa-pause";
-        togglePlayer(true);
         
-        audio.ontimeupdate = () => {
-            const seek = document.getElementById('pop-seek');
-            seek.max = audio.duration;
-            seek.value = audio.currentTime;
-            document.getElementById('time-cur').innerText = formatTime(audio.currentTime);
-            document.getElementById('time-dur').innerText = formatTime(audio.duration);
-        };
+        document.getElementById('p-title').innerText = title;
+        document.getElementById('p-author').innerText = author;
+        document.getElementById('p-art').src = art;
+        document.getElementById('p-bg').style.backgroundImage = `url(${art})`;
+        
+        document.getElementById('p-main-btn').className = "fas fa-pause play-trigger";
+        togglePlayer(true);
+    }
+
+    function togglePlayer(show) {
+        player.classList.toggle('active', show);
     }
 
     function togglePlay() {
-        const btn = document.getElementById('pop-play');
-        if(audio.paused) { audio.play(); btn.className = "fas fa-pause"; }
-        else { audio.pause(); btn.className = "fas fa-play"; }
+        const btn = document.getElementById('p-main-btn');
+        if(audio.paused) { audio.play(); btn.className = "fas fa-pause play-trigger"; }
+        else { audio.pause(); btn.className = "fas fa-play play-trigger"; }
     }
 
-    function skip(s) { audio.currentTime += s; }
+    function skip(sec) { audio.currentTime += sec; }
+
+    audio.ontimeupdate = () => {
+        const seek = document.getElementById('p-seek');
+        const cur = document.getElementById('p-current');
+        const dur = document.getElementById('p-duration');
+        
+        seek.max = audio.duration || 0;
+        seek.value = audio.currentTime;
+        
+        cur.innerText = formatTime(audio.currentTime);
+        dur.innerText = formatTime(audio.duration);
+    };
+
     function formatTime(s) {
         if(isNaN(s)) return "0:00";
         const m = Math.floor(s/60);
@@ -293,40 +361,24 @@
         return `${m}:${sec < 10 ? '0' : ''}${sec}`;
     }
 
-    async function init() {
-        const hero = document.getElementById('featured-hero');
-        const trending = document.getElementById('scroll-trending');
-        try {
-            const r = await fetch(`https://itunes.apple.com/search?term=podcast&limit=10&country=de`);
-            const d = await r.json();
-            const f = d.results[0];
-            
-            hero.innerHTML = `
-                <div class="featured-banner animate-entry" onclick="loadEpisodes('${f.feedUrl}', '${f.artworkUrl600}', '${f.collectionName}')">
-                    <div class="featured-bg" style="background: url('${f.artworkUrl600}') center/cover"></div>
-                    <span style="color:var(--ios-blue); font-weight:800; font-size:12px">HIGHLIGHT</span>
-                    <h1 style="margin:5px 0">${f.collectionName}</h1>
-                    <p style="margin:0; opacity:0.8">${f.artistName}</p>
-                </div>`;
+    document.getElementById('p-seek').oninput = (e) => audio.currentTime = e.target.value;
 
-            d.results.slice(1).forEach(p => {
-                trending.innerHTML += `
-                    <div class="card-item animate-entry" onclick="loadEpisodes('${p.feedUrl}', '${p.artworkUrl600}', '${p.collectionName}')">
-                        <img src="${p.artworkUrl600}" class="card-icon">
-                        <div style="font-weight:600; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis">${p.collectionName}</div>
+    // Start-Inhalt
+    async function init() {
+        const grid = document.getElementById('trending-grid');
+        try {
+            const r = await fetch(`https://itunes.apple.com/search?term=top&entity=podcast&limit=6&country=de`);
+            const data = await r.json();
+            grid.innerHTML = "";
+            data.results.forEach(p => {
+                grid.innerHTML += `
+                    <div class="card" onclick="loadFeed('${p.feedUrl}', '${p.artworkUrl600}', '${p.collectionName}')">
+                        <img src="${p.artworkUrl600}">
+                        <div class="card-title">${p.collectionName}</div>
                     </div>`;
             });
-        } catch(e) { console.log("Init failed"); }
+        } catch(e) {}
     }
-
-    window.onscroll = () => {
-        const h = document.getElementById('main-header');
-        const nav = document.querySelector('.bottom-nav');
-        if(window.scrollY > 40) { h.classList.add('scrolled'); nav.classList.add('nav-scrolled'); }
-        else { h.classList.remove('scrolled'); nav.classList.remove('nav-scrolled'); }
-    };
-
-    document.getElementById('pop-seek').oninput = (e) => audio.currentTime = e.target.value;
 
     init();
 </script>
