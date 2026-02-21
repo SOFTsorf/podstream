@@ -97,24 +97,44 @@
             z-index: 10;
         }
 
-        .audio-bars { display: flex; align-items: center; gap: 4px; height: 50px; }
+        .audio-bars { display: flex; align-items: center; gap: 4px; height: 50px; z-index: 10; }
         .bar { 
             width: 4px; background: rgba(255,255,255,0.8); border-radius: 2px; height: 10px; 
             transition: height 0.05s ease;
         }
 
+        /* Haupt-Player Vinyl Styling */
         .cover-container {
             position: relative; width: 75vw; max-width: 340px; aspect-ratio: 1/1;
             transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
             z-index: 10; 
         }
+        .main-vinyl-record {
+            position: absolute; top: 2%; right: -15%; width: 96%; height: 96%;
+            background: #111; border-radius: 50%; z-index: -1;
+            border: 2px solid #222;
+            background: repeating-radial-gradient(#111, #111 5px, #1a1a1a 6px, #1a1a1a 7px);
+            box-shadow: 5px 5px 20px rgba(0,0,0,0.8);
+            transition: transform 0.5s ease-out;
+            animation: spin 6s linear infinite;
+            animation-play-state: paused;
+        }
+        .main-vinyl-record::after {
+            content: ''; position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%); width: 30%; height: 30%;
+            background: var(--spotify-green); border-radius: 50%;
+            border: 4px solid #000;
+        }
         .cover-art {
             position: absolute; inset: 0; width: 100%; height: 100%;
-            border-radius: 15px; object-fit: cover;
+            border-radius: 10px; object-fit: cover;
             box-shadow: 0 15px 40px rgba(0,0,0,0.6);
             transition: opacity 0.6s ease-in-out, box-shadow 0.1s ease-out; 
+            z-index: 2;
         }
         .fade-out { opacity: 0 !important; }
+
+        @keyframes spin { 100% { transform: rotate(360deg); } }
 
         .feedback-icon {
             position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
@@ -171,17 +191,10 @@
         .scroll-subtext {
             display: inline-block; font-size: 14px; opacity: 0.7;
         }
-        .marquee-active {
-            animation: scroll-left 8s linear infinite;
-        }
-        @keyframes scroll-left {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-50%); }
-        }
+        .marquee-active { animation: scroll-left 8s linear infinite; }
+        @keyframes scroll-left { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
 
-        .time-display {
-            font-size: 12px; color: rgba(255,255,255,0.6); font-variant-numeric: tabular-nums;
-        }
+        .time-display { font-size: 12px; color: rgba(255,255,255,0.6); font-variant-numeric: tabular-nums; }
 
         .action-icon {
             font-size: 24px; cursor: pointer; transition: transform 0.2s, color 0.2s;
@@ -189,11 +202,7 @@
         }
         .action-icon.liked { color: #ff3b30; animation: heartBeat 0.3s forwards; }
 
-        @keyframes heartBeat {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.3); }
-            100% { transform: scale(1); }
-        }
+        @keyframes heartBeat { 0% { transform: scale(1); } 50% { transform: scale(1.3); } 100% { transform: scale(1); } }
 
         .spotify-circle {
             width: 45px; height: 45px; background: var(--spotify-green);
@@ -223,14 +232,74 @@
         
         .panel-header {
             position: absolute; top: calc(env(safe-area-inset-top) + 20px); left: 20px; right: 20px;
-            display: flex; align-items: center; justify-content: center;
+            display: flex; align-items: center; justify-content: center; z-index: 10;
         }
-        .panel-back { position: absolute; left: 0; font-size: 24px; cursor: pointer; padding: 10px; }
+        .panel-back { position: absolute; left: 0; font-size: 24px; cursor: pointer; padding: 10px; z-index: 11; }
         .panel-title { margin: 0; font-size: 20px; font-weight: bold; }
 
-        .list-container { margin-top: 10px; }
+        /* NEU: Vinyl-Stapel Design für Verlauf */
+        .vinyl-stack {
+            padding-top: 30px;
+            padding-bottom: 100px;
+            display: flex;
+            flex-direction: column;
+        }
+        .vinyl-item {
+            position: relative;
+            background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+            border-radius: 12px;
+            height: 90px;
+            margin-bottom: -35px; /* Überlappung der Platten */
+            display: flex;
+            align-items: center;
+            box-shadow: 0 -15px 25px rgba(0,0,0,0.6);
+            transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), margin-bottom 0.3s ease;
+            cursor: pointer;
+            z-index: 1;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+        .vinyl-item:hover, .vinyl-item:active {
+            transform: translateY(-15px);
+            margin-bottom: -15px;
+            z-index: 50; /* Beim Antippen nach vorne holen */
+        }
+        .vinyl-item.active-history-item {
+            z-index: 40;
+            border-left: 4px solid var(--spotify-green);
+        }
         
-        .list-item {
+        .vinyl-sleeve {
+            width: 90px; height: 90px; border-radius: 12px 0 0 12px;
+            object-fit: cover; z-index: 3;
+            box-shadow: 5px 0 15px rgba(0,0,0,0.7);
+        }
+        .vinyl-disc {
+            position: absolute; left: 45px; width: 80px; height: 80px;
+            border-radius: 50%; z-index: 2;
+            background: repeating-radial-gradient(#111, #111 4px, #1a1a1a 5px, #1a1a1a 6px);
+            border: 1px solid #333;
+            transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+        .vinyl-disc::after {
+            content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 25px; height: 25px; background: #fff; border-radius: 50%; border: 2px solid #000;
+        }
+        .vinyl-item:hover .vinyl-disc, .vinyl-item.active-history-item .vinyl-disc {
+            transform: translateX(40px) rotate(180deg);
+        }
+        .vinyl-item.active-history-item .vinyl-disc {
+            animation: spin 4s linear infinite;
+        }
+        
+        .vinyl-info {
+            flex: 1; padding: 0 15px 0 50px; overflow: hidden; z-index: 4;
+            display: flex; flex-direction: column; justify-content: center;
+        }
+        .vinyl-info b { font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
+        .vinyl-info small { color: #ccc; font-size: 13px; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
+
+        .list-container { margin-top: 10px; }
+        .list-item { /* Altes Design für Favoriten beibehalten */
             display: flex; align-items: center; gap: 15px; margin-bottom: 15px;
             background: #2a2a2a; padding: 10px; border-radius: 15px;
             transition: background 0.2s;
@@ -240,13 +309,11 @@
         .list-item-info b { font-size: 15px; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .list-item-info small { color: #aaa; }
         
-        .list-actions { display: flex; gap: 15px; align-items: center; padding-right: 5px; }
+        .list-actions { display: flex; gap: 15px; align-items: center; padding-right: 5px; z-index: 10;}
         .list-btn { font-size: 18px; color: #fff; opacity: 0.7; cursor: pointer; transition: opacity 0.2s; }
         .list-btn:active { opacity: 1; transform: scale(0.9); }
         .list-btn.delete { color: #ff3b30; }
         .list-btn.play { color: var(--spotify-green); }
-
-        .active-history-item { border-left: 4px solid var(--spotify-green); background: #333; }
 
         #modal-overlay {
             position: fixed; inset: 0; z-index: 10000;
@@ -307,6 +374,7 @@
             </div>
             
             <div class="cover-container" id="cover-container">
+                <div class="main-vinyl-record" id="main-vinyl"></div>
                 <img id="main-cover" class="cover-art" src="" alt="">
                 <div id="feedback-icon" class="feedback-icon"><i class="fas fa-thumbs-down"></i></div>
                 <div id="big-heart-icon" class="big-heart-overlay"><i class="fas fa-heart"></i></div>
@@ -352,9 +420,9 @@
     <div id="history-panel" class="side-panel">
         <div class="panel-header">
             <i class="fas fa-chevron-left panel-back" onclick="toggleHistory(false)"></i>
-            <h2 class="panel-title">Verlauf</h2>
+            <h2 class="panel-title">Plattenkiste</h2>
         </div>
-        <div id="history-list" class="list-container"></div>
+        <div id="history-list" class="vinyl-stack"></div>
     </div>
 
     <div id="likes-panel" class="side-panel">
@@ -372,6 +440,7 @@
     const allBars = document.querySelectorAll('.bar');
     const coverContainer = document.getElementById('cover-container');
     const mainCoverImg = document.getElementById('main-cover');
+    const mainVinyl = document.getElementById('main-vinyl');
     const likeBtn = document.getElementById('like-btn');
     
     // State
@@ -382,7 +451,7 @@
     let isTransitioning = false;
     
     // History & Blacklist
-    let recentHistory = []; 
+    let globalPlayedIds = new Set(); // Speichert ALLE jemals gespielten Tracks, um Wiederholungen zu vermeiden
     let dislikedArtists = new Set(); 
 
     // Swipe State
@@ -413,29 +482,49 @@
             dataArray = new Uint8Array(analyser.frequencyBinCount);
             drawVisualizer();
         }
+        
+        setupMediaSession();
         await loadMusic('Top Hits'); 
+    }
+
+    function setupMediaSession() {
+        if ('mediaSession' in navigator) {
+            navigator.mediaSession.setActionHandler('play', () => { player.play(); updateMediaSessionState(); });
+            navigator.mediaSession.setActionHandler('pause', () => { player.pause(); updateMediaSessionState(); });
+            navigator.mediaSession.setActionHandler('previoustrack', playPrevTrack);
+            navigator.mediaSession.setActionHandler('nexttrack', playNextTrack);
+            navigator.mediaSession.setActionHandler('seekto', (details) => {
+                if (details.fastSeek && 'fastSeek' in player) {
+                  player.fastSeek(details.seekTime);
+                } else {
+                  player.currentTime = details.seekTime;
+                }
+            });
+        }
+    }
+
+    function updateMediaSessionState() {
+        if ('mediaSession' in navigator) {
+            navigator.mediaSession.playbackState = player.paused ? 'paused' : 'playing';
+            mainVinyl.style.animationPlayState = player.paused ? 'paused' : 'running';
+        }
     }
 
     async function loadMusic(searchTerm) {
         try {
-            // NEU: country=DE zwingt die API in den deutschen Katalog (liefert englische & deutsche Top-Tracks)
-            // Limit auf 200, damit nach dem Rausfiltern genug Songs übrig sind
             const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(searchTerm)}&entity=song&limit=200&country=DE`);
             const data = await res.json();
             
-            // NEU: Strikte Blacklist für unerwünschte Stile/Feiertagsmusik
-            const unwantedKeywords = ['christmas', 'xmas', 'holiday', 'weihnacht', 'weihnachten', 'bollywood', 'indian', 'hindi', 'punjabi', 'navidad'];
+            // Erweiterte Blacklist für Weihnachts- & Feiertagsmusik
+            const unwantedKeywords = ['christmas', 'xmas', 'holiday', 'weihnacht', 'weihnachten', 'santa', 'snow', 'jingle', 'claus', 'navidad', 'merry', 'winter', 'bollywood', 'indian', 'hindi'];
             
             tracks = data.results.filter(t => {
                 if (!t.previewUrl) return false;
-                
-                // Prüfe Titel, Künstler und Genre auf verbotene Wörter
                 const textToCheck = (t.trackName + " " + t.artistName + " " + (t.primaryGenreName || "")).toLowerCase();
                 if (unwantedKeywords.some(keyword => textToCheck.includes(keyword))) {
-                    return false; // Song wegwerfen
+                    return false; 
                 }
-                
-                return true; // Song behalten
+                return true; 
             });
             
             playNextTrack();
@@ -456,9 +545,8 @@
         player.pause();
         isTransitioning = true;
         
-        recentHistory = []; 
-        playedHistory = [];
-        currentIndex = -1;
+        // playedHistory behalten wir für den Verlauf, aber wir laden neue Tracks
+        currentIndex = playedHistory.length - 1; 
         
         await loadMusic(category);
     }
@@ -496,14 +584,15 @@
             if(tracks.length === 0) return;
             isTransitioning = false; 
             
+            // Filtere Songs raus, die in dieser Session schon liefen oder deren Artist gedisliked wurde
             let availableTracks = tracks.filter(t => 
-                !recentHistory.includes(t.trackId) && 
-                !recentHistory.includes(t.artistName) &&
+                !globalPlayedIds.has(t.trackId) && 
                 !dislikedArtists.has(t.artistName) 
             );
             
+            // Wenn alle Songs der Liste gespielt wurden, Set zurücksetzen (außer Dislikes)
             if (availableTracks.length === 0) {
-                recentHistory = [];
+                globalPlayedIds.clear(); 
                 availableTracks = tracks.filter(t => !dislikedArtists.has(t.artistName));
             }
 
@@ -511,9 +600,7 @@
 
             const newTrack = availableTracks.splice(Math.floor(Math.random() * availableTracks.length), 1)[0];
             
-            recentHistory.push(newTrack.trackId, newTrack.artistName);
-            if(recentHistory.length > 20) recentHistory.splice(0, 2); 
-
+            globalPlayedIds.add(newTrack.trackId);
             playedHistory.push(newTrack);
             currentIndex++;
             loadTrackIntoUI(newTrack);
@@ -570,6 +657,19 @@
             likeBtn.classList.replace('fas', 'far');
         }
 
+        // Media Session API Updaten
+        if ('mediaSession' in navigator) {
+            navigator.mediaSession.metadata = new MediaMetadata({
+                title: track.trackName,
+                artist: track.artistName,
+                album: 'MusicBack',
+                artwork: [
+                    { src: track.artworkUrl100, sizes: '100x100', type: 'image/jpeg' },
+                    { src: track.artworkUrl100.replace('100x100bb', '600x600bb'), sizes: '600x600', type: 'image/jpeg' }
+                ]
+            });
+        }
+
         let vol = player.volume;
         const fadeOut = setInterval(() => {
             if (vol > 0.1) {
@@ -580,6 +680,7 @@
                 player.pause();
                 
                 mainCoverImg.classList.add('fade-out');
+                mainVinyl.style.opacity = '0';
                 infoSection.style.opacity = '0';
 
                 setTimeout(() => {
@@ -593,10 +694,14 @@
                     applyMarquee('display-artist', track.artistName);
 
                     player.src = track.previewUrl;
-                    if (audioCtx.state === 'suspended') audioCtx.resume();
-                    player.play();
+                    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+                    
+                    player.play().then(() => {
+                        updateMediaSessionState();
+                    }).catch(e => console.log("Autoplay blockiert", e));
                     
                     mainCoverImg.classList.remove('fade-out');
+                    mainVinyl.style.opacity = '1';
                     infoSection.style.opacity = '1';
 
                     let volIn = 0;
@@ -699,6 +804,7 @@
             player.pause();
             coverContainer.style.transform = "scale(0.92)"; 
         }
+        updateMediaSessionState();
     }
 
     function toggleLike(e, isDoubleTap = false) {
@@ -772,30 +878,28 @@
         }
     }
 
+    // NEU: Vinyl-Stapel Render-Funktion
     function renderHistory() {
         const list = document.getElementById('history-list');
         let html = '';
+        
+        // Rendert von Alt (oben) nach Neu (unten) oder umgekehrt - hier von Neu nach Alt
         for (let i = playedHistory.length - 1; i >= 0; i--) {
             const t = playedHistory[i];
             const isActive = i === currentIndex ? 'active-history-item' : '';
-            const safeTrackName = t.trackName.replace(/'/g, ""); 
-            const safeArtistName = t.artistName.replace(/'/g, "");
-
+            
             html += `
-                <div class="list-item ${isActive}">
-                    <img src="${t.artworkUrl100}" onclick='playSpecificTrack(${JSON.stringify(t).replace(/'/g, "'")})'>
-                    <div class="list-item-info" onclick='playSpecificTrack(${JSON.stringify(t).replace(/'/g, "'")})'>
+                <div class="vinyl-item ${isActive}" onclick='playSpecificTrack(${JSON.stringify(t).replace(/'/g, "&apos;")})'>
+                    <div class="vinyl-disc"></div>
+                    <img class="vinyl-sleeve" src="${t.artworkUrl100}">
+                    <div class="vinyl-info">
                         <b>${t.trackName}</b>
                         <small>${t.artistName}</small>
-                    </div>
-                    <div class="list-actions">
-                        ${isActive ? '<i class="fas fa-volume-up" style="color: var(--spotify-green); margin-right:10px;"></i>' : ''}
-                        <i class="fas fa-download list-btn" onclick="downloadSong('${t.previewUrl}', '${safeArtistName} - ${safeTrackName}')"></i>
                     </div>
                 </div>
             `;
         }
-        list.innerHTML = html || '<p style="text-align:center; color:#aaa; margin-top:30px;">Noch keine Songs gehört.</p>';
+        list.innerHTML = html || '<p style="text-align:center; color:#aaa; margin-top:30px;">Noch keine Platten gehört.</p>';
     }
 
     function renderLikes() {
@@ -815,7 +919,7 @@
                         <small>${t.artistName}</small>
                     </div>
                     <div class="list-actions">
-                        <i class="fas fa-play list-btn play" onclick='playSpecificTrack(${JSON.stringify(t).replace(/'/g, "'")})'></i>
+                        <i class="fas fa-play list-btn play" onclick='playSpecificTrack(${JSON.stringify(t).replace(/'/g, "&apos;")})'></i>
                         <i class="fas fa-download list-btn" onclick="downloadSong('${t.previewUrl}', '${safeArtistName} - ${safeTrackName}')"></i>
                         <i class="fas fa-trash list-btn delete" onclick="removeFromLikes(${t.trackId})"></i>
                     </div>
@@ -840,6 +944,7 @@
     function triggerSpotify(event) {
         event.stopPropagation();
         player.pause();
+        updateMediaSessionState();
         coverContainer.style.transform = "scale(0.92)";
         document.getElementById('modal-overlay').style.display = 'flex';
     }
@@ -847,6 +952,7 @@
     function closeModal() {
         document.getElementById('modal-overlay').style.display = 'none';
         player.play();
+        updateMediaSessionState();
         coverContainer.style.transform = "scale(1)";
     }
 
@@ -878,9 +984,24 @@
         const p = (player.currentTime / player.duration) * 100;
         document.getElementById('progress-bar').style.width = p + '%';
         document.getElementById('time-display').innerText = `${formatTime(player.currentTime)} / ${formatTime(player.duration)}`;
+        
+        // Synchronisiere Fortschritt mit Sperrbildschirm/Media Session
+        if ('mediaSession' in navigator && navigator.mediaSession.setPositionState) {
+            try {
+                navigator.mediaSession.setPositionState({
+                    duration: player.duration || 30,
+                    playbackRate: player.playbackRate,
+                    position: player.currentTime
+                });
+            } catch (e) {}
+        }
     };
 
     player.onended = playNextTrack;
+    
+    // Play/Pause Listener für Media Session Synchronisation
+    player.addEventListener('play', updateMediaSessionState);
+    player.addEventListener('pause', updateMediaSessionState);
 </script>
 </body>
 </html>
