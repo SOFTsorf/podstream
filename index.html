@@ -7,214 +7,195 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
-            --spotify: #1DB954;
-            --bg: #000;
-            --glass: rgba(255, 255, 255, 0.12);
-            --text: #ffffff;
+            --spotify-green: #1DB954;
+            --glass: rgba(255, 255, 255, 0.15);
+            --bg-dark: #0a0a0a;
         }
 
         body, html {
             margin: 0; padding: 0; width: 100%; height: 100%;
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
-            background: var(--bg); color: var(--text); overflow: hidden;
+            background-color: var(--bg-dark);
+            color: white; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+            overflow: hidden;
         }
 
         /* --- START SCREEN --- */
         #start-screen {
-            position: fixed; inset: 0; background: #000; z-index: 9999;
+            position: fixed; inset: 0; z-index: 9999; background: #000;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
+            transition: opacity 0.5s ease;
         }
-        .app-logo-big { font-size: 42px; font-weight: 900; margin-bottom: 40px; letter-spacing: -1px; }
         .start-btn {
-            background: #fff; color: #000; padding: 18px 50px; border-radius: 40px;
-            font-size: 18px; font-weight: 700; cursor: pointer; transition: 0.3s;
+            background: transparent; color: white; border: 1px solid white;
+            padding: 15px 40px; border-radius: 30px; font-size: 18px;
+            font-weight: 300; letter-spacing: 2px; cursor: pointer; transition: 0.3s;
         }
-        .start-btn:active { transform: scale(0.9); }
+        .start-btn:hover { background: white; color: black; }
 
-        /* --- BACKGROUND --- */
-        #dynamic-bg {
+        /* --- DYNAMISCHER BACKGROUND --- */
+        #blur-bg {
             position: absolute; inset: -10%; width: 120%; height: 120%;
             background-size: cover; background-position: center;
-            filter: blur(80px) brightness(0.5); z-index: 0; transition: 1.2s ease;
+            filter: blur(60px) brightness(0.4); z-index: 0; transition: background-image 0.8s ease;
         }
 
-        /* --- MAIN UI --- */
-        .main-ui {
-            position: relative; z-index: 10; height: 100%; width: 100%;
-            display: flex; flex-direction: column;
-        }
-
+        /* --- HEADER --- */
         header {
-            padding: 60px 25px 20px;
+            position: relative; z-index: 10; padding: 50px 20px 0;
             display: flex; justify-content: center; align-items: center;
         }
-        .app-title { font-size: 20px; font-weight: 800; opacity: 0.9; }
-        .history-btn { position: absolute; right: 25px; font-size: 22px; cursor: pointer; }
+        .logo-text { font-size: 22px; font-weight: 700; letter-spacing: 1px; }
+        .history-btn { position: absolute; right: 25px; font-size: 22px; cursor: pointer; opacity: 0.8; }
 
-        /* --- CONTENT (TIKTOK STYLE) --- */
-        .content-area {
-            flex: 1; display: flex; align-items: center; justify-content: center;
-            padding: 20px;
+        /* --- TIKTOK CONTENT AREA --- */
+        .feed-container {
+            position: relative; z-index: 5; flex: 1; height: 70vh;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
         }
-        .main-card {
-            width: 90vw; max-width: 400px; aspect-ratio: 1/1;
-            position: relative; cursor: pointer;
+        .cover-art {
+            width: 85vw; max-width: 380px; aspect-ratio: 1/1;
+            border-radius: 12px; box-shadow: 0 25px 50px rgba(0,0,0,0.6);
+            object-fit: cover; cursor: pointer; transition: transform 0.2s;
         }
-        #current-cover {
-            width: 100%; height: 100%; border-radius: 12px;
-            box-shadow: 0 30px 60px rgba(0,0,0,0.7); object-fit: cover;
-            transition: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-        .main-card:active #current-cover { transform: scale(0.96); }
+        .cover-art:active { transform: scale(0.97); }
 
-        /* --- FOOTER (Spotify Style) --- */
-        .player-footer {
-            padding: 30px 25px 60px;
-            display: flex; align-items: flex-end; justify-content: space-between;
+        /* --- SPOTIFY STYLE BOTTOM CARD --- */
+        .bottom-card {
+            position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%);
+            width: 90vw; max-width: 400px;
+            background: rgba(40, 40, 40, 0.7); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border-radius: 16px; padding: 15px 20px;
+            display: flex; align-items: center; justify-content: space-between;
+            z-index: 10; border: 1px solid rgba(255,255,255,0.05);
         }
-        .track-meta h1 { font-size: 24px; margin: 0; font-weight: 800; }
-        .track-meta p { font-size: 17px; margin: 5px 0 0; opacity: 0.7; }
+        .song-details { flex: 1; overflow: hidden; margin-right: 15px; }
+        .song-details h3 { margin: 0; font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .song-details p { margin: 4px 0 0; font-size: 14px; opacity: 0.6; }
 
-        .spotify-trigger {
-            width: 58px; height: 58px; background: var(--spotify);
+        .spotify-logo-btn {
+            width: 45px; height: 45px; background: var(--spotify-green);
             border-radius: 50%; display: flex; align-items: center; justify-content: center;
-            font-size: 30px; color: #000; box-shadow: 0 8px 20px rgba(29, 185, 84, 0.3);
-            text-decoration: none; transition: 0.3s;
+            font-size: 24px; color: black; text-decoration: none; transition: transform 0.2s;
         }
-        .spotify-trigger:active { transform: scale(0.8); }
+        .spotify-logo-btn:active { transform: scale(0.85); }
 
-        /* --- HISTORY LIST --- */
+        /* --- HISTORY PANEL --- */
         #history-panel {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.95);
-            z-index: 2000; display: none; padding: 70px 25px;
-            backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
+            position: fixed; inset: 0; background: rgba(0,0,0,0.92);
+            z-index: 2000; display: none; padding: 80px 25px;
+            backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
         }
+        .history-list { height: 100%; overflow-y: auto; }
         .history-item {
-            display: flex; align-items: center; padding: 15px;
-            background: var(--glass); border-radius: 16px; margin-bottom: 12px;
+            display: flex; align-items: center; padding: 12px;
+            background: var(--glass); border-radius: 12px; margin-bottom: 10px;
         }
-        .history-item img { width: 55px; height: 55px; border-radius: 8px; margin-right: 15px; }
-        .history-item .info { flex: 1; overflow: hidden; }
-        .history-item h4 { margin: 0; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .history-item p { margin: 3px 0 0; font-size: 13px; opacity: 0.6; }
-        
-        .close-btn { position: absolute; top: 30px; left: 25px; font-size: 24px; }
+        .history-item img { width: 50px; height: 50px; border-radius: 6px; margin-right: 15px; }
+        .history-close { position: absolute; top: 30px; left: 25px; font-size: 24px; cursor: pointer; }
 
-        /* Loader */
-        .loading-ring {
-            position: absolute; width: 40px; height: 40px;
-            border: 4px solid rgba(255,255,255,0.1); border-top-color: #fff;
-            border-radius: 50%; animation: spin 1s infinite linear;
+        /* --- PROGRESS --- */
+        .progress-container {
+            position: absolute; bottom: 0; left: 0; width: 100%; height: 2px;
+            background: rgba(255,255,255,0.1);
         }
-        @keyframes spin { to { transform: rotate(360deg); } }
+        #progress-bar { height: 100%; background: white; width: 0%; }
     </style>
 </head>
 <body>
 
     <div id="start-screen">
-        <div class="app-logo-big">MusicBack</div>
-        <div class="start-btn" onclick="initApp()">START</div>
+        <h1 style="margin-bottom: 40px; font-weight: 200;">MusicBack</h1>
+        <button class="start-btn" onclick="initApp()">START</button>
     </div>
 
-    <div id="dynamic-bg"></div>
+    <div id="blur-bg"></div>
 
-    <div class="main-ui">
-        <header>
-            <div class="app-title">MusicBack</div>
-            <i class="fas fa-clock-rotate-left history-btn" onclick="toggleHistory(true)"></i>
-        </header>
+    <header>
+        <div class="logo-text">MusicBack</div>
+        <i class="fas fa-history history-btn" onclick="toggleHistory(true)"></i>
+    </header>
 
-        <div class="content-area">
-            <div id="loader" class="loading-ring" style="display:none;"></div>
-            <div class="main-card" onclick="nextTrack()">
-                <img id="current-cover" src="" alt="">
-            </div>
+    <div class="feed-container" onclick="nextTrack()">
+        <img id="main-cover" class="cover-art" src="" alt="">
+    </div>
+
+    <div class="bottom-card">
+        <div class="song-details">
+            <h3 id="song-title">Lade...</h3>
+            <p id="song-artist">...</p>
         </div>
-
-        <div class="player-footer">
-            <div class="track-meta">
-                <h1 id="m-title">Laden...</h1>
-                <p id="m-artist">...</p>
-            </div>
-            <a href="#" id="m-spotify" target="_blank" class="spotify-trigger">
-                <i class="fab fa-spotify"></i>
-            </a>
+        <a href="#" id="spotify-link" target="_blank" class="spotify-logo-btn">
+            <i class="fab fa-spotify"></i>
+        </a>
+        <div class="progress-container">
+            <div id="progress-bar"></div>
         </div>
     </div>
 
     <div id="history-panel">
-        <i class="fas fa-xmark close-btn" onclick="toggleHistory(false)"></i>
-        <h2 style="margin-bottom: 30px;">Zuletzt gehört</h2>
-        <div id="history-list"></div>
+        <i class="fas fa-chevron-left history-close" onclick="toggleHistory(false)"></i>
+        <h2 style="margin-bottom: 25px;">Verlauf</h2>
+        <div class="history-list" id="history-content"></div>
     </div>
 
-    <audio id="audio-engine" preload="auto"></audio>
+    <audio id="audio-player"></audio>
 
 <script>
-    const audio = document.getElementById('audio-engine');
+    const audio = document.getElementById('audio-player');
     const history = [];
-    let trackQueue = [];
+    let tracks = [];
 
     async function initApp() {
         document.getElementById('start-screen').style.opacity = '0';
         setTimeout(() => document.getElementById('start-screen').style.display = 'none', 500);
-        fetchMusic();
-    }
-
-    async function fetchMusic() {
-        const genres = ['Techno', 'Hardstyle', 'Phonk', 'Rock', 'Metal', 'Electronic'];
+        
+        // Suche nach coolen Genres (Techno/Phonk passend zu den Bildern)
+        const genres = ['Phonk', 'Techno', 'Metal', 'Electronic', 'Cyberpunk'];
         const randomGenre = genres[Math.floor(Math.random() * genres.length)];
         
         try {
-            const r = await fetch(`https://itunes.apple.com/search?term=${randomGenre}&entity=song&limit=25`);
+            const r = await fetch(`https://itunes.apple.com/search?term=${randomGenre}&entity=song&limit=40`);
             const data = await r.json();
-            trackQueue = data.results.filter(t => t.previewUrl);
+            tracks = data.results.filter(t => t.previewUrl);
             nextTrack();
-        } catch (e) { console.log("Fehler beim Laden"); }
+        } catch (e) { alert("Fehler beim Laden der Musik."); }
     }
 
     function nextTrack() {
-        if (trackQueue.length === 0) { fetchMusic(); return; }
+        if(tracks.length === 0) return;
         
-        const track = trackQueue.pop();
-        const highResCover = track.artworkUrl100.replace('100x100bb', '600x600bb');
+        const track = tracks.splice(Math.floor(Math.random() * tracks.length), 1)[0];
+        const art = track.artworkUrl100.replace('100x100bb', '600x600bb');
         
-        // UI Updates
-        document.getElementById('m-title').innerText = track.trackName;
-        document.getElementById('m-artist').innerText = track.artistName;
-        document.getElementById('current-cover').src = highResCover;
-        document.getElementById('dynamic-bg').style.backgroundImage = `url(${highResCover})`;
+        // UI
+        document.getElementById('song-title').innerText = track.trackName;
+        document.getElementById('song-artist').innerText = track.artistName;
+        document.getElementById('main-cover').src = art;
+        document.getElementById('blur-bg').style.backgroundImage = `url(${art})`;
         
-        // Spotify Deep Link (Search)
+        // Spotify Link (Deep Link Search)
         const query = encodeURIComponent(`${track.artistName} ${track.trackName}`);
-        document.getElementById('m-spotify').href = `spotify:search:${query}`;
+        document.getElementById('spotify-link').href = `spotify:search:${query}`;
 
         // Audio
         audio.src = track.previewUrl;
-        audio.play().catch(e => console.log("Play blocked"));
+        audio.play();
 
-        // Add to history
-        saveToHistory(track);
-    }
-
-    function saveToHistory(t) {
-        history.unshift(t);
-        if(history.length > 30) history.pop();
+        // Verlauf
+        history.unshift(track);
         renderHistory();
     }
 
     function renderHistory() {
-        const container = document.getElementById('history-list');
-        container.innerHTML = history.map(t => `
+        const content = document.getElementById('history-content');
+        content.innerHTML = history.map(t => `
             <div class="history-item" onclick="playPreview('${t.previewUrl}', '${t.trackName}', '${t.artistName}', '${t.artworkUrl100}')">
                 <img src="${t.artworkUrl100}">
-                <div class="info">
+                <div style="flex:1; overflow:hidden;">
                     <h4>${t.trackName}</h4>
                     <p>${t.artistName}</p>
                 </div>
-                <a href="spotify:search:${encodeURIComponent(t.artistName + ' ' + t.trackName)}" style="color:var(--spotify); font-size:20px;">
-                    <i class="fab fa-spotify"></i>
-                </a>
+                <i class="fab fa-spotify" style="color:var(--spotify-green); font-size:20px;"></i>
             </div>
         `).join('');
     }
@@ -222,16 +203,21 @@
     function playPreview(url, title, artist, art) {
         audio.src = url;
         audio.play();
-        document.getElementById('m-title').innerText = title;
-        document.getElementById('m-artist').innerText = artist;
-        document.getElementById('current-cover').src = art.replace('100x100bb', '600x600bb');
-        document.getElementById('dynamic-bg').style.backgroundImage = `url(${art.replace('100x100bb', '600x600bb')})`;
+        document.getElementById('song-title').innerText = title;
+        document.getElementById('song-artist').innerText = artist;
+        document.getElementById('main-cover').src = art.replace('100x100bb', '600x600bb');
+        document.getElementById('blur-bg').style.backgroundImage = `url(${art.replace('100x100bb', '600x600bb')})`;
         toggleHistory(false);
     }
 
     function toggleHistory(show) {
         document.getElementById('history-panel').style.display = show ? 'block' : 'none';
     }
+
+    audio.ontimeupdate = () => {
+        const p = (audio.currentTime / audio.duration) * 100;
+        document.getElementById('progress-bar').style.width = p + '%';
+    };
 
     audio.onended = nextTrack;
 </script>
