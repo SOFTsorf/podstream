@@ -21,7 +21,6 @@
             overflow: hidden; touch-action: none;
         }
 
-        /* Dynamischer Hintergrund */
         #bg-blur {
             position: fixed; 
             top: -10%; left: -10%; width: 120%; height: 120%; 
@@ -31,17 +30,17 @@
             transition: background-image 0.8s ease-in-out;
         }
 
-        /* NEU: Farbverläufe oben und unten für weiches Ausblenden */
+        /* FIX: Z-Index auf 30 erhöht, damit es das Cover überdeckt und sanft ausblendet */
         .gradient-top {
-            position: fixed; top: 0; left: 0; width: 100%; height: 25%;
-            background: linear-gradient(to bottom, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0) 100%);
-            z-index: 5; pointer-events: none;
+            position: fixed; top: 0; left: 0; width: 100%; height: 30%;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0) 100%);
+            z-index: 30; pointer-events: none;
         }
         
         .gradient-bottom {
             position: fixed; bottom: 0; left: 0; width: 100%; height: 35%;
             background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0) 100%);
-            z-index: 5; pointer-events: none;
+            z-index: 30; pointer-events: none;
         }
 
         /* --- START SCREEN --- */
@@ -59,11 +58,16 @@
 
         /* --- HEADER --- */
         header {
-            position: absolute; top: 0; left: 0; width: 100%; z-index: 100;
+            position: absolute; top: 0; left: 0; width: 100%; height: 60px; z-index: 100;
             padding: calc(env(safe-area-inset-top) + 15px) 25px 10px; 
             display: flex; justify-content: space-between; align-items: center;
         }
-        .logo-text { font-size: 18px; font-weight: 700; letter-spacing: 0.5px; flex: 1; text-align: center; }
+        
+        /* FIX: Logo ist jetzt absolut mittig und stört nicht mehr das Layout */
+        .logo-text { 
+            position: absolute; left: 50%; transform: translateX(-50%);
+            font-size: 18px; font-weight: 700; letter-spacing: 0.5px; 
+        }
         
         .header-actions {
             position: absolute; right: 25px; display: flex; gap: 20px; align-items: center;
@@ -71,7 +75,7 @@
         .header-icon { font-size: 22px; cursor: pointer; text-shadow: 0 2px 10px rgba(0,0,0,0.5); transition: transform 0.2s; }
         .header-icon:active { transform: scale(0.8); }
 
-        /* NEU: Kategorie Pills */
+        /* Kategorie Pills */
         .category-container {
             position: absolute; top: calc(env(safe-area-inset-top) + 55px); left: 0; width: 100%;
             display: flex; gap: 10px; padding: 10px 25px; overflow-x: auto; z-index: 100;
@@ -81,9 +85,10 @@
         .category-pill {
             background: rgba(255, 255, 255, 0.15); color: white; border: none; 
             padding: 8px 18px; border-radius: 20px; font-size: 14px; font-weight: 600; 
-            white-space: nowrap; cursor: pointer; transition: background 0.2s;
+            white-space: nowrap; cursor: pointer; transition: background 0.2s, transform 0.1s;
             backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
         }
+        .category-pill:active { transform: scale(0.95); }
         .category-pill.active { background: var(--spotify-green); color: black; }
 
         /* --- MAIN CONTENT --- */
@@ -117,13 +122,22 @@
         }
         .fade-out { opacity: 0 !important; }
 
+        /* Feedback Icon (für Daumen runter) */
+        .feedback-icon {
+            position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+            font-size: 90px; color: #ff3b30; opacity: 0; z-index: 20; transform: scale(0.5);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); pointer-events: none;
+            text-shadow: 0 10px 30px rgba(0,0,0,0.8);
+        }
+        .feedback-icon.show { opacity: 1; transform: scale(1); }
+
         /* --- SONG INFO & CARD --- */
         .info-section {
             position: absolute; bottom: calc(env(safe-area-inset-bottom) + 30px);
             width: 85vw; max-width: 400px;
             transition: opacity 0.5s ease-in-out;
             display: flex; flex-direction: column; align-items: stretch;
-            z-index: 20;
+            z-index: 40; /* Höher als Gradients, damit Karte lesbar bleibt */
         }
         .artist-tag { 
             font-size: 22px; font-weight: 800; margin-bottom: 12px; margin-left: 5px;
@@ -137,7 +151,6 @@
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
         
-        /* NEU: Scrolling Text (Marquee) */
         .song-details { flex: 1; overflow: hidden; position: relative; display: flex; flex-direction: column; gap: 2px;}
         .scroll-container {
             width: 100%; overflow: hidden; white-space: nowrap; position: relative; mask-image: linear-gradient(to right, black 90%, transparent 100%); -webkit-mask-image: linear-gradient(to right, black 90%, transparent 100%);
@@ -260,7 +273,7 @@
     </div>
 
     <header>
-        <div style="width: 60px;"></div> <div class="logo-text">MusicBack</div>
+        <div class="logo-text">MusicBack</div>
         <div class="header-actions">
             <i class="fas fa-share-alt header-icon" onclick="shareTrack()"></i> 
             <i class="fas fa-heart header-icon" onclick="toggleLikes(true)"></i>
@@ -269,10 +282,11 @@
     </header>
 
     <div class="category-container">
-        <button class="category-pill active">Alle</button>
-        <button class="category-pill">Musik</button>
-        <button class="category-pill">Podcasts</button>
-        <button class="category-pill">Hörbücher</button>
+        <button class="category-pill active" onclick="changeCategory('Top Hits', this)">Alle</button>
+        <button class="category-pill" onclick="changeCategory('Techno', this)">Techno</button>
+        <button class="category-pill" onclick="changeCategory('House', this)">House</button>
+        <button class="category-pill" onclick="changeCategory('Hip-Hop', this)">Hip-Hop</button>
+        <button class="category-pill" onclick="changeCategory('Pop', this)">Pop</button>
     </div>
 
     <div id="feed-container">
@@ -283,6 +297,7 @@
             
             <div class="cover-container" id="cover-container">
                 <img id="main-cover" class="cover-art" src="" alt="">
+                <div id="feedback-icon" class="feedback-icon"><i class="fas fa-thumbs-down"></i></div>
             </div>
 
             <div class="audio-bars" id="bars-right">
@@ -353,11 +368,13 @@
     let currentIndex = -1;
     let isTransitioning = false;
     
-    // NEU: Anti-Wiederholungs History (merkt sich die letzten 10 gespielten Songs/Artists)
+    // History & Blacklist
     let recentHistory = []; 
+    let dislikedArtists = new Set(); // Speichert Artists, die du wegswipest
 
     // Swipe State
     let startY = 0;
+    let startX = 0;
     let isDragging = false;
     let lastTapTime = 0;
 
@@ -383,7 +400,39 @@
             dataArray = new Uint8Array(analyser.frequencyBinCount);
             drawVisualizer();
         }
-        await loadMusic();
+        await loadMusic('Top Hits'); // Standard Start-Kategorie
+    }
+
+    // NEU: API Fetch Funktion ausgelagert für die Kategorien
+    async function loadMusic(searchTerm) {
+        try {
+            const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(searchTerm)}&entity=song&limit=100`);
+            const data = await res.json();
+            tracks = data.results.filter(t => t.previewUrl);
+            playNextTrack();
+        } catch(e) {
+            console.error("Laden fehlgeschlagen", e);
+        }
+    }
+
+    // NEU: Kategorie wechseln
+    async function changeCategory(category, btnElement) {
+        if(isTransitioning) return;
+        
+        document.querySelectorAll('.category-pill').forEach(p => p.classList.remove('active'));
+        btnElement.classList.add('active');
+        
+        applyMarquee('display-title', 'Lade neue Songs...');
+        applyMarquee('display-artist', category);
+        
+        player.pause();
+        isTransitioning = true;
+        
+        recentHistory = []; 
+        playedHistory = [];
+        currentIndex = -1;
+        
+        await loadMusic(category);
     }
 
     function drawVisualizer() {
@@ -403,37 +452,32 @@
         }
     }
 
-    async function loadMusic() {
-        const res = await fetch('https://itunes.apple.com/search?term=techno&entity=song&limit=100');
-        const data = await res.json();
-        tracks = data.results.filter(t => t.previewUrl);
-        playNextTrack();
-    }
-
     function playNextTrack() {
-        if (isTransitioning) return;
-        if (currentIndex < playedHistory.length - 1) {
+        if (currentIndex < playedHistory.length - 1 && !isTransitioning) {
             currentIndex++;
             loadTrackIntoUI(playedHistory[currentIndex]);
         } else {
             if(tracks.length === 0) return;
+            isTransitioning = false; // Release lock for direct loading
             
-            // NEU: Filter für Wiederholungen
-            let availableTracks = tracks.filter(t => !recentHistory.includes(t.trackId) && !recentHistory.includes(t.artistName));
+            // Filter für Wiederholungen UND Dislikes
+            let availableTracks = tracks.filter(t => 
+                !recentHistory.includes(t.trackId) && 
+                !recentHistory.includes(t.artistName) &&
+                !dislikedArtists.has(t.artistName) // Blockiere Artists, die nach rechts geswiped wurden
+            );
             
-            // Falls alle durchgespielt wurden, History leeren
             if (availableTracks.length === 0) {
                 recentHistory = [];
-                availableTracks = tracks;
+                availableTracks = tracks.filter(t => !dislikedArtists.has(t.artistName));
             }
+
+            if(availableTracks.length === 0) availableTracks = tracks; // Fallback
 
             const newTrack = availableTracks.splice(Math.floor(Math.random() * availableTracks.length), 1)[0];
             
-            // Zu History hinzufügen (Track ID und Artist Name)
             recentHistory.push(newTrack.trackId, newTrack.artistName);
-            if(recentHistory.length > 20) { // Behalte nur die letzten ~10 Songs im Gedächtnis
-                recentHistory.splice(0, 2); 
-            }
+            if(recentHistory.length > 20) recentHistory.splice(0, 2); 
 
             playedHistory.push(newTrack);
             currentIndex++;
@@ -463,18 +507,15 @@
         toggleLikes(false);
     }
 
-    // NEU: Funktion für das sanfte Scrollen von langem Text
     function applyMarquee(elementId, text) {
         const container = document.getElementById(elementId).parentElement;
         const el = document.getElementById(elementId);
         
         el.classList.remove('marquee-active');
-        el.innerHTML = text; // Setze den normalen Text
+        el.innerHTML = text; 
         
-        // Timeout, damit der DOM render Zeit hat die echte Breite zu berechnen
         setTimeout(() => {
             if (el.scrollWidth > container.clientWidth) {
-                // Text duplizieren für flüssigen Scroll-Loop
                 el.innerHTML = `${text} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${text}`;
                 el.classList.add('marquee-active');
             }
@@ -514,7 +555,6 @@
                     
                     document.getElementById('display-top-artist').innerText = track.artistName;
                     
-                    // NEU: Titel und Artist (statt Tracknummer) eintragen & Marquee checken
                     applyMarquee('display-title', track.trackName);
                     applyMarquee('display-artist', track.artistName);
 
@@ -541,35 +581,49 @@
         }, 30); 
     }
 
-    // --- SWIPE & GESTEN ---
+    // --- SWIPE & GESTEN (Jetzt mit X und Y Achse!) ---
     coverContainer.addEventListener('touchstart', e => {
         if (isTransitioning) return;
         startY = e.touches[0].clientY;
+        startX = e.touches[0].clientX;
         isDragging = true;
         coverContainer.style.transition = 'none'; 
     });
 
     coverContainer.addEventListener('touchmove', e => {
         if (!isDragging || isTransitioning) return;
-        const diff = e.touches[0].clientY - startY;
-        coverContainer.style.transform = `translateY(${diff * 0.6}px) scale(0.95)`;
+        const diffY = e.touches[0].clientY - startY;
+        const diffX = e.touches[0].clientX - startX;
+        
+        // Cover bewegt sich flexibel in alle Richtungen
+        coverContainer.style.transform = `translate(${diffX * 0.4}px, ${diffY * 0.6}px) scale(0.95)`;
     });
 
     coverContainer.addEventListener('touchend', e => {
         if (!isDragging) return;
         isDragging = false;
-        const diff = e.changedTouches[0].clientY - startY;
+        const diffY = e.changedTouches[0].clientY - startY;
+        const diffX = e.changedTouches[0].clientX - startX;
         
         coverContainer.style.transition = 'transform 0.4s cubic-bezier(0.25, 1, 0.5, 1)';
-        coverContainer.style.transform = 'translateY(0) scale(1)';
+        coverContainer.style.transform = 'translate(0px, 0px) scale(1)';
 
-        if (diff < -80) { 
+        // Logik für Daumen runter (Swipe nach rechts)
+        if (Math.abs(diffX) > Math.abs(diffY) && diffX > 90) {
+            triggerThumbsDown();
+        } 
+        // Normaler Swipe nach oben (Next)
+        else if (diffY < -80) { 
             if (navigator.vibrate) navigator.vibrate(40); 
             playNextTrack();
-        } else if (diff > 80 && currentIndex > 0) { 
+        } 
+        // Normaler Swipe nach unten (Prev)
+        else if (diffY > 80 && currentIndex > 0) { 
             if (navigator.vibrate) navigator.vibrate(40);
             playPrevTrack();
-        } else if (Math.abs(diff) < 10) { 
+        } 
+        // Tap oder Double-Tap
+        else if (Math.abs(diffY) < 10 && Math.abs(diffX) < 10) { 
             const currentTime = new Date().getTime();
             const tapLength = currentTime - lastTapTime;
             
@@ -583,6 +637,25 @@
             lastTapTime = currentTime;
         }
     });
+
+    // NEU: Daumen runter Logik
+    function triggerThumbsDown() {
+        if(currentIndex === -1) return;
+        const currentTrack = playedHistory[currentIndex];
+        
+        // Artist blockieren
+        dislikedArtists.add(currentTrack.artistName);
+        
+        // Icon flashen lassen
+        const icon = document.getElementById('feedback-icon');
+        icon.classList.add('show');
+        if (navigator.vibrate) navigator.vibrate([50, 50, 50]);
+        
+        setTimeout(() => {
+            icon.classList.remove('show');
+            playNextTrack();
+        }, 400);
+    }
 
     // --- INTERAKTIONEN ---
     function togglePlayPause() {
@@ -647,7 +720,6 @@
         }
     }
 
-    // NEU: Spotify Share Link statt iTunes
     async function shareTrack() {
         if (currentIndex === -1) return;
         const track = playedHistory[currentIndex];
@@ -679,8 +751,8 @@
 
             html += `
                 <div class="list-item ${isActive}">
-                    <img src="${t.artworkUrl100}" onclick='playSpecificTrack(${JSON.stringify(t).replace(/'/g, "&#39;")})'>
-                    <div class="list-item-info" onclick='playSpecificTrack(${JSON.stringify(t).replace(/'/g, "&#39;")})'>
+                    <img src="${t.artworkUrl100}" onclick='playSpecificTrack(${JSON.stringify(t).replace(/'/g, "'")})'>
+                    <div class="list-item-info" onclick='playSpecificTrack(${JSON.stringify(t).replace(/'/g, "'")})'>
                         <b>${t.trackName}</b>
                         <small>${t.artistName}</small>
                     </div>
@@ -711,7 +783,7 @@
                         <small>${t.artistName}</small>
                     </div>
                     <div class="list-actions">
-                        <i class="fas fa-play list-btn play" onclick='playSpecificTrack(${JSON.stringify(t).replace(/'/g, "&#39;")})'></i>
+                        <i class="fas fa-play list-btn play" onclick='playSpecificTrack(${JSON.stringify(t).replace(/'/g, "'")})'></i>
                         <i class="fas fa-download list-btn" onclick="downloadSong('${t.previewUrl}', '${safeArtistName} - ${safeTrackName}')"></i>
                         <i class="fas fa-trash list-btn delete" onclick="removeFromLikes(${t.trackId})"></i>
                     </div>
@@ -777,14 +849,6 @@
     };
 
     player.onended = playNextTrack;
-    
-    // Kleine Spielerei für die Kategorie Pills (optisch aktiv setzen)
-    document.querySelectorAll('.category-pill').forEach(pill => {
-        pill.addEventListener('click', function() {
-            document.querySelectorAll('.category-pill').forEach(p => p.classList.remove('active'));
-            this.classList.add('active');
-        });
-    });
 </script>
 </body>
 </html>
