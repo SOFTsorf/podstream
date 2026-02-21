@@ -8,7 +8,7 @@
     <style>
         :root {
             --spotify-green: #1DB954;
-            --bg-color: #b5a93e; /* Standard-Farbe wie im Bild */
+            --bg-color: #b5a93e; 
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -29,7 +29,10 @@
         .start-btn {
             background: var(--spotify-green); color: white; border: none;
             padding: 18px 60px; border-radius: 40px; font-size: 20px; font-weight: bold; cursor: pointer;
+            box-shadow: 0 4px 15px rgba(29, 185, 84, 0.4);
+            transition: transform 0.2s;
         }
+        .start-btn:active { transform: scale(0.95); }
 
         /* --- HEADER --- */
         header {
@@ -39,7 +42,7 @@
         .logo-text { font-size: 18px; font-weight: 600; opacity: 0.9; }
         .history-btn { position: absolute; right: 25px; font-size: 22px; cursor: pointer; }
 
-        /* --- MAIN CONTENT (Referenz 43116.jpg) --- */
+        /* --- MAIN CONTENT --- */
         #feed-container {
             height: 100dvh; display: flex; flex-direction: column;
             align-items: center; justify-content: center; position: relative;
@@ -50,59 +53,67 @@
         }
 
         .audio-bars {
-            display: flex; align-items: center; gap: 4px; height: 40px;
+            display: flex; align-items: center; gap: 4px; height: 50px;
         }
-        .bar { width: 4px; background: rgba(255,255,255,0.8); border-radius: 2px; height: 10px; }
-        .playing .bar { animation: barPulse 0.8s infinite ease-in-out; }
-        @keyframes barPulse { 
-            0%, 100% { height: 10px; } 50% { height: 30px; } 
+        /* Die CSS-Animation ist raus, JS übernimmt die Höhe */
+        .bar { 
+            width: 4px; 
+            background: rgba(255,255,255,0.9); 
+            border-radius: 2px; 
+            height: 10px; 
+            transition: height 0.05s ease; /* Macht die Sprünge etwas weicher */
         }
 
         .cover-art {
             width: 70vw; max-width: 320px; aspect-ratio: 1/1;
             border-radius: 12px; object-fit: cover;
             box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-            transition: transform 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+            transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1);
         }
 
         /* --- SONG INFO & CARD --- */
         .info-section {
             width: 90vw; max-width: 400px; margin-top: 40px;
         }
-        .artist-tag { font-size: 18px; font-weight: 700; margin-bottom: 20px; }
+        .artist-tag { font-size: 18px; font-weight: 700; margin-bottom: 20px; text-align: center; }
 
         .bottom-card {
             background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px); border-radius: 25px;
             padding: 15px 20px; display: flex; align-items: center;
             justify-content: space-between; border: 1px solid rgba(255,255,255,0.1);
-            position: relative;
+            position: relative; overflow: hidden;
         }
-        .song-details { flex: 1; overflow: hidden; }
+        .song-details { flex: 1; overflow: hidden; padding-right: 10px; }
         .song-details h3 { margin: 0; font-size: 17px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .song-details p { margin: 4px 0 0; font-size: 14px; opacity: 0.8; }
 
         .spotify-circle {
             width: 45px; height: 45px; background: var(--spotify-green);
             border-radius: 50%; display: flex; align-items: center; justify-content: center;
-            font-size: 24px; color: black; cursor: pointer;
+            font-size: 24px; color: black; cursor: pointer; z-index: 2;
         }
 
         .progress-line {
-            position: absolute; bottom: 0; left: 20px; height: 3px;
+            position: absolute; bottom: 0; left: 0; height: 3px;
             background: var(--spotify-green); width: 0%; border-radius: 2px;
+            transition: width 0.1s linear;
         }
 
-        /* --- MODAL (Exakt wie 43002.jpg) --- */
+        /* --- MODAL --- */
         #modal-overlay {
             position: fixed; inset: 0; z-index: 10000;
             background: rgba(0,0,0,0.7); display: none;
             align-items: center; justify-content: center; padding: 25px;
+            backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);
         }
         .modal-box {
             background: white; color: black; width: 100%; max-width: 320px;
             border-radius: 30px; padding: 35px 25px; text-align: center;
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
+        @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        
         .modal-box h2 { margin: 0 0 10px; font-size: 22px; }
         .modal-box p { margin: 0 0 25px; color: #666; font-size: 15px; line-height: 1.4; }
         .btn-green {
@@ -128,7 +139,7 @@
 
     <div id="start-screen">
         <h1 style="margin-bottom: 20px;">MusicBack</h1>
-        <button class="start-btn" onclick="startApp()">START</button>
+        <button class="start-btn" onclick="startApp()">Start</button>
     </div>
 
     <header>
@@ -138,9 +149,13 @@
 
     <div id="feed-container">
         <div class="visualizer-wrapper" id="visualizer">
-            <div class="audio-bars"><div class="bar"></div><div class="bar"></div><div class="bar"></div></div>
-            <img id="main-cover" class="cover-art" src="" alt="">
-            <div class="audio-bars"><div class="bar"></div><div class="bar"></div><div class="bar"></div></div>
+            <div class="audio-bars" id="bars-left">
+                <div class="bar"></div><div class="bar"></div><div class="bar"></div>
+            </div>
+            <img id="main-cover" class="cover-art" src="" alt="" onclick="togglePlayPause()">
+            <div class="audio-bars" id="bars-right">
+                <div class="bar"></div><div class="bar"></div><div class="bar"></div>
+            </div>
         </div>
 
         <div class="info-section">
@@ -169,26 +184,74 @@
     </div>
 
     <div id="history-panel">
-        <i class="fas fa-chevron-left" style="position:absolute; top:30px; left:20px; font-size:24px;" onclick="toggleHistory(false)"></i>
+        <i class="fas fa-chevron-left" style="position:absolute; top:30px; left:20px; font-size:24px; cursor:pointer;" onclick="toggleHistory(false)"></i>
         <h2 style="margin-bottom:20px;">Dein Verlauf</h2>
         <div id="history-list"></div>
     </div>
 
-    <audio id="player"></audio>
+    <audio id="player" crossorigin="anonymous"></audio>
 
 <script>
     const player = document.getElementById('player');
-    const history = [];
+    const allBars = document.querySelectorAll('.bar');
+    const historyData = [];
     let tracks = [];
     let currentTrack = null;
     let startY = 0;
 
+    // Web Audio API Variablen
+    let audioCtx, analyser, dataArray;
+
     async function startApp() {
         document.getElementById('start-screen').style.display = 'none';
+        
+        // AudioContext muss initialisiert werden, NACHDEM der Nutzer interagiert hat (Start Button)
+        if (!audioCtx) {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            analyser = audioCtx.createAnalyser();
+            const source = audioCtx.createMediaElementSource(player);
+            source.connect(analyser);
+            analyser.connect(audioCtx.destination);
+            
+            analyser.fftSize = 64; // Kleine Auflösung reicht für ein paar Balken
+            const bufferLength = analyser.frequencyBinCount;
+            dataArray = new Uint8Array(bufferLength);
+            
+            // Schleife für die Visualisierung starten
+            drawVisualizer();
+        }
+
         await loadMusic();
     }
 
+    // --- AUDIO VISUALIZATION LOOP ---
+    function drawVisualizer() {
+        requestAnimationFrame(drawVisualizer);
+        
+        if (!player.paused) {
+            analyser.getByteFrequencyData(dataArray);
+            
+            // Wir mappen bestimmte Frequenz-Bereiche auf die 6 Balken
+            // dataArray hat Werte von 0 bis 255
+            if (allBars.length >= 6) {
+                // Linke Seite (Bass bis Mitten)
+                allBars[0].style.height = 10 + (dataArray[2] / 255) * 40 + 'px';
+                allBars[1].style.height = 10 + (dataArray[4] / 255) * 40 + 'px';
+                allBars[2].style.height = 10 + (dataArray[6] / 255) * 40 + 'px';
+                
+                // Rechte Seite (gespiegelt für Symmetrie)
+                allBars[3].style.height = 10 + (dataArray[6] / 255) * 40 + 'px';
+                allBars[4].style.height = 10 + (dataArray[4] / 255) * 40 + 'px';
+                allBars[5].style.height = 10 + (dataArray[2] / 255) * 40 + 'px';
+            }
+        } else {
+            // Wenn pausiert, Balken sanft auf 10px zurücksetzen
+            allBars.forEach(bar => bar.style.height = '10px');
+        }
+    }
+
     async function loadMusic() {
+        // Lädt Techno Songs aus der iTunes API
         const res = await fetch('https://itunes.apple.com/search?term=techno&entity=song&limit=50');
         const data = await res.json();
         tracks = data.results.filter(t => t.previewUrl);
@@ -205,27 +268,56 @@
         document.getElementById('display-title').innerText = currentTrack.trackName;
         document.getElementById('display-album').innerText = currentTrack.collectionName;
         
-        // Hintergrundfarbe simulieren (vereinfacht)
+        // Hintergrundfarbe dynamisch generieren (für den Vibe)
         document.body.style.backgroundColor = `hsl(${Math.random() * 360}, 40%, 40%)`;
         
+        // Audio Context checken (Browser blockieren manchmal Audio-Wiedergabe)
+        if (audioCtx.state === 'suspended') {
+            audioCtx.resume();
+        }
+
         player.src = currentTrack.previewUrl;
         player.play();
-        document.getElementById('visualizer').classList.add('playing');
 
-        history.unshift(currentTrack);
+        historyData.unshift(currentTrack);
         updateHistory();
     }
 
-    // SWIPE LOGIC
+    // --- INTERAKTIONEN ---
+
+    // Klick aufs Cover = Play/Pause
+    function togglePlayPause() {
+        if (player.paused) {
+            player.play();
+            document.getElementById('main-cover').style.transform = "scale(1)";
+        } else {
+            player.pause();
+            // Leichter "eingedrückter" Effekt bei Pause
+            document.getElementById('main-cover').style.transform = "scale(0.95)"; 
+        }
+    }
+
+    // SWIPE LOGIC (Fühlt sich an wie TikTok)
     document.addEventListener('touchstart', e => startY = e.touches[0].clientY);
+    document.addEventListener('touchmove', e => {
+        const diff = startY - e.touches[0].clientY;
+        // Das Bild folgt dem Finger beim nach oben wischen
+        if (diff > 0 && diff < 150) {
+            document.getElementById('main-cover').style.transform = `translateY(-${diff}px) scale(0.95)`;
+        }
+    });
     document.addEventListener('touchend', e => {
         const diff = startY - e.changedTouches[0].clientY;
-        if(diff > 70) {
+        if(diff > 80) {
+            // Erfolgreicher Swipe - Song wegfliegen lassen
             document.getElementById('main-cover').style.transform = 'translateY(-100vh)';
             setTimeout(() => {
                 document.getElementById('main-cover').style.transform = 'translateY(0)';
                 showNext();
-            }, 400);
+            }, 300);
+        } else {
+            // Swipe abgebrochen - Cover springt zurück
+            document.getElementById('main-cover').style.transform = 'translateY(0) scale(1)';
         }
     });
 
@@ -249,14 +341,14 @@
     // HISTORY
     function updateHistory() {
         const list = document.getElementById('history-list');
-        list.innerHTML = history.map(t => `
+        list.innerHTML = historyData.map(t => `
             <div class="history-item">
                 <img src="${t.artworkUrl100}">
                 <div style="flex:1">
                     <b>${t.trackName}</b><br>
                     <small>${t.artistName}</small>
                 </div>
-                <i class="fas fa-download" onclick="downloadPreview('${t.previewUrl}', '${t.trackName}')"></i>
+                <i class="fas fa-download" style="font-size: 20px; padding: 10px; cursor: pointer;" onclick="downloadPreview('${t.previewUrl}', '${t.trackName}')"></i>
             </div>
         `).join('');
     }
@@ -273,12 +365,20 @@
         a.click();
     }
 
+    // Fortschrittsbalken aktualisieren
     player.ontimeupdate = () => {
         const p = (player.currentTime / player.duration) * 100;
         document.getElementById('progress-bar').style.width = p + '%';
     };
 
-    player.onended = showNext;
+    // Automatisch nächster Song
+    player.onended = () => {
+        document.getElementById('main-cover').style.transform = 'translateY(-100vh)';
+        setTimeout(() => {
+            document.getElementById('main-cover').style.transform = 'translateY(0)';
+            showNext();
+        }, 300);
+    };
 </script>
 </body>
 </html>
