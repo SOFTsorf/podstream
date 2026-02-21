@@ -8,134 +8,128 @@
     <style>
         :root {
             --spotify-green: #1DB954;
-            --spotify-green-hover: #1ed760;
-            --bg-dark: #121212;
-            --card-bg: rgba(28, 28, 28, 0.7);
+            --bg-color: #b5a93e; /* Standard-Farbe wie im Bild */
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
         body, html {
             margin: 0; padding: 0; width: 100%; height: 100dvh;
-            background-color: #000; color: white;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: white; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
             overflow: hidden; touch-action: none;
+            transition: background-color 0.8s ease;
         }
 
         /* --- START SCREEN --- */
         #start-screen {
             position: fixed; inset: 0; z-index: 10000; background: #000;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            transition: opacity 0.5s ease;
         }
         .start-btn {
-            background: var(--spotify-green); color: black; border: none;
-            padding: 18px 50px; border-radius: 40px; font-size: 20px;
-            font-weight: bold; cursor: pointer; transition: 0.3s;
-        }
-
-        /* --- BACKGROUND --- */
-        #blur-bg {
-            position: absolute; inset: -10%; width: 120%; height: 120%;
-            background-size: cover; background-position: center;
-            filter: blur(50px) brightness(0.4); z-index: 0; transition: background-image 0.8s ease;
+            background: var(--spotify-green); color: white; border: none;
+            padding: 18px 60px; border-radius: 40px; font-size: 20px; font-weight: bold; cursor: pointer;
         }
 
         /* --- HEADER --- */
         header {
             position: absolute; top: 0; width: 100%; z-index: 100;
-            padding: 60px 25px 20px; display: flex; justify-content: space-between; align-items: center;
+            padding: 50px 20px 20px; display: flex; justify-content: center; align-items: center;
         }
-        .logo-text { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
-        .history-btn { font-size: 26px; cursor: pointer; opacity: 0.9; }
+        .logo-text { font-size: 18px; font-weight: 600; opacity: 0.9; }
+        .history-btn { position: absolute; right: 25px; font-size: 22px; cursor: pointer; }
 
-        /* --- FEED AREA --- */
+        /* --- MAIN CONTENT (Referenz 43116.jpg) --- */
         #feed-container {
-            position: relative; z-index: 10; height: 100dvh; width: 100%;
-            display: flex; align-items: center; justify-content: center;
+            height: 100dvh; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; position: relative;
         }
+
+        .visualizer-wrapper {
+            display: flex; align-items: center; gap: 20px; width: 100%; justify-content: center;
+        }
+
+        .audio-bars {
+            display: flex; align-items: center; gap: 4px; height: 40px;
+        }
+        .bar { width: 4px; background: rgba(255,255,255,0.8); border-radius: 2px; height: 10px; }
+        .playing .bar { animation: barPulse 0.8s infinite ease-in-out; }
+        @keyframes barPulse { 
+            0%, 100% { height: 10px; } 50% { height: 30px; } 
+        }
+
         .cover-art {
-            width: 85vw; max-width: 380px; aspect-ratio: 1/1;
-            border-radius: 15px; box-shadow: 0 30px 60px rgba(0,0,0,0.7);
-            object-fit: cover; transition: transform 0.4s cubic-bezier(0.2, 1, 0.3, 1);
+            width: 70vw; max-width: 320px; aspect-ratio: 1/1;
+            border-radius: 12px; object-fit: cover;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            transition: transform 0.5s cubic-bezier(0.23, 1, 0.32, 1);
         }
 
-        /* --- BOTTOM CARD --- */
+        /* --- SONG INFO & CARD --- */
+        .info-section {
+            width: 90vw; max-width: 400px; margin-top: 40px;
+        }
+        .artist-tag { font-size: 18px; font-weight: 700; margin-bottom: 20px; }
+
         .bottom-card {
-            position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
-            width: 92vw; max-width: 420px;
-            background: var(--card-bg); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
-            border-radius: 24px; padding: 20px;
-            display: flex; align-items: center; justify-content: space-between;
-            z-index: 100; border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px); border-radius: 25px;
+            padding: 15px 20px; display: flex; align-items: center;
+            justify-content: space-between; border: 1px solid rgba(255,255,255,0.1);
+            position: relative;
         }
-        .song-info { flex: 1; overflow: hidden; margin-right: 15px; }
-        .song-info h3 { margin: 0; font-size: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .song-info p { margin: 5px 0 0; font-size: 14px; opacity: 0.6; }
+        .song-details { flex: 1; overflow: hidden; }
+        .song-details h3 { margin: 0; font-size: 17px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .song-details p { margin: 4px 0 0; font-size: 14px; opacity: 0.8; }
 
-        .spotify-btn {
-            width: 54px; height: 54px; background: var(--spotify-green);
+        .spotify-circle {
+            width: 45px; height: 45px; background: var(--spotify-green);
             border-radius: 50%; display: flex; align-items: center; justify-content: center;
-            font-size: 30px; color: black; cursor: pointer; transition: 0.2s;
+            font-size: 24px; color: black; cursor: pointer;
         }
 
-        /* --- PROGRESS BAR --- */
-        .progress-bar-container {
-            position: absolute; bottom: 0; left: 20px; right: 20px; height: 3px;
-            background: rgba(255,255,255,0.1); border-radius: 2px;
+        .progress-line {
+            position: absolute; bottom: 0; left: 20px; height: 3px;
+            background: var(--spotify-green); width: 0%; border-radius: 2px;
         }
-        #progress-fill { height: 100%; background: var(--spotify-green); width: 0%; border-radius: 2px; }
 
-        /* --- MODAL (Bist du sicher?) --- */
-        #confirm-modal {
+        /* --- MODAL (Exakt wie 43002.jpg) --- */
+        #modal-overlay {
             position: fixed; inset: 0; z-index: 10000;
-            background: rgba(0,0,0,0.8); display: none;
-            align-items: center; justify-content: center; padding: 20px;
+            background: rgba(0,0,0,0.7); display: none;
+            align-items: center; justify-content: center; padding: 25px;
         }
-        .modal-card {
+        .modal-box {
             background: white; color: black; width: 100%; max-width: 320px;
-            border-radius: 28px; padding: 30px 25px; text-align: center;
-            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border-radius: 30px; padding: 35px 25px; text-align: center;
         }
-        @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-        .modal-card h2 { margin: 0 0 15px; font-size: 22px; font-weight: 700; }
-        .modal-card p { margin: 0 0 25px; font-size: 15px; line-height: 1.5; color: #555; }
-        .modal-btn-confirm {
-            background: var(--spotify-green); color: white; border: none;
-            width: 100%; padding: 15px; border-radius: 30px;
-            font-size: 18px; font-weight: bold; cursor: pointer; margin-bottom: 10px;
+        .modal-box h2 { margin: 0 0 10px; font-size: 22px; }
+        .modal-box p { margin: 0 0 25px; color: #666; font-size: 15px; line-height: 1.4; }
+        .btn-green {
+            background: #62d36f; color: white; border: none; width: 100%;
+            padding: 16px; border-radius: 40px; font-size: 18px; font-weight: bold;
+            cursor: pointer; margin-bottom: 15px;
         }
-        .modal-btn-cancel {
-            background: none; border: none; width: 100%; padding: 10px;
-            font-size: 16px; font-weight: bold; color: black; cursor: pointer;
-        }
+        .btn-text { background: none; border: none; font-size: 16px; font-weight: bold; cursor: pointer; }
 
-        /* --- HISTORY PANEL --- */
+        /* --- HISTORY --- */
         #history-panel {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.95);
-            z-index: 5000; display: none; padding: 80px 20px 20px;
-            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            position: fixed; inset: 0; background: #121212; z-index: 5000;
+            display: none; padding: 80px 20px; overflow-y: auto;
         }
-        .history-list { height: 100%; overflow-y: auto; padding-bottom: 40px; }
         .history-item {
-            display: flex; align-items: center; background: rgba(255,255,255,0.05);
-            margin-bottom: 12px; padding: 12px; border-radius: 16px;
+            display: flex; align-items: center; gap: 15px; margin-bottom: 15px;
+            background: rgba(255,255,255,0.05); padding: 10px; border-radius: 15px;
         }
-        .history-item img { width: 55px; height: 55px; border-radius: 8px; margin-right: 15px; }
-        .history-item-content { flex: 1; overflow: hidden; }
-        .history-item-content h4 { margin: 0; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .history-item-content p { margin: 4px 0 0; font-size: 13px; opacity: 0.5; }
-        .download-btn { font-size: 20px; margin-right: 15px; opacity: 0.7; cursor: pointer; }
+        .history-item img { width: 50px; height: 50px; border-radius: 8px; }
     </style>
 </head>
 <body>
 
     <div id="start-screen">
-        <h1 style="margin-bottom: 30px; font-size: 40px;">MusicBack</h1>
-        <button class="start-btn" onclick="initApp()">START</button>
+        <h1 style="margin-bottom: 20px;">MusicBack</h1>
+        <button class="start-btn" onclick="startApp()">START</button>
     </div>
-
-    <div id="blur-bg"></div>
 
     <header>
         <div class="logo-text">MusicBack</div>
@@ -143,126 +137,126 @@
     </header>
 
     <div id="feed-container">
-        <img id="main-cover" class="cover-art" src="" alt="">
+        <div class="visualizer-wrapper" id="visualizer">
+            <div class="audio-bars"><div class="bar"></div><div class="bar"></div><div class="bar"></div></div>
+            <img id="main-cover" class="cover-art" src="" alt="">
+            <div class="audio-bars"><div class="bar"></div><div class="bar"></div><div class="bar"></div></div>
+        </div>
+
+        <div class="info-section">
+            <div class="artist-tag" id="display-artist">Artist</div>
+            <div class="bottom-card">
+                <div class="song-details">
+                    <h3 id="display-title">Song Title</h3>
+                    <p id="display-album">Album Name</p>
+                </div>
+                <div class="spotify-circle" onclick="triggerSpotify()">
+                    <i class="fab fa-spotify"></i>
+                </div>
+                <div class="progress-line" id="progress-bar"></div>
+            </div>
+        </div>
     </div>
 
-    <div class="bottom-card">
-        <div class="song-info">
-            <h3 id="song-title">Warten...</h3>
-            <p id="song-artist">Entdecke neue Musik</p>
-        </div>
-        <div class="spotify-btn" onclick="askSpotify()">
-            <i class="fab fa-spotify"></i>
-        </div>
-        <div class="progress-bar-container">
-            <div id="progress-fill"></div>
-        </div>
-    </div>
-
-    <div id="confirm-modal">
-        <div class="modal-card">
+    <div id="modal-overlay">
+        <div class="modal-box">
             <h2>Bist du sicher?</h2>
-            <p>Nach dem Klicken wirst du zu Spotify weitergeleitet und MusicBack wird pausiert.</p>
-            <button class="modal-btn-confirm" onclick="openSpotify()">Öffnen</button>
-            <button class="modal-btn-cancel" onclick="closeModal()">Abbrechen</button>
+            <p>MusicBack wird pausiert und du wirst direkt zum Song auf Spotify weitergeleitet.</p>
+            <button class="btn-green" onclick="confirmSpotify()">Öffnen</button>
+            <br>
+            <button class="btn-text" onclick="closeModal()">Abbrechen</button>
         </div>
     </div>
 
     <div id="history-panel">
-        <i class="fas fa-times" style="position: absolute; top: 30px; left: 25px; font-size: 28px;" onclick="toggleHistory(false)"></i>
-        <h2 style="margin-bottom: 25px;">Zuletzt gehört</h2>
-        <div class="history-list" id="history-list"></div>
+        <i class="fas fa-chevron-left" style="position:absolute; top:30px; left:20px; font-size:24px;" onclick="toggleHistory(false)"></i>
+        <h2 style="margin-bottom:20px;">Dein Verlauf</h2>
+        <div id="history-list"></div>
     </div>
 
-    <audio id="audio-player"></audio>
+    <audio id="player"></audio>
 
 <script>
-    const audio = document.getElementById('audio-player');
+    const player = document.getElementById('player');
     const history = [];
     let tracks = [];
     let currentTrack = null;
     let startY = 0;
 
-    async function initApp() {
-        document.getElementById('start-screen').style.opacity = '0';
-        setTimeout(() => document.getElementById('start-screen').style.display = 'none', 500);
-        
-        await fetchMusic();
-        nextTrack();
+    async function startApp() {
+        document.getElementById('start-screen').style.display = 'none';
+        await loadMusic();
     }
 
-    async function fetchMusic() {
-        const genres = ['Techno', 'Hardstyle', 'Phonk', 'Deep House', 'Rave'];
-        const genre = genres[Math.floor(Math.random() * genres.length)];
-        try {
-            const r = await fetch(`https://itunes.apple.com/search?term=${genre}&entity=song&limit=40`);
-            const data = await r.json();
-            tracks = data.results.filter(t => t.previewUrl);
-        } catch (e) { console.error("Fehler beim Laden"); }
+    async function loadMusic() {
+        const res = await fetch('https://itunes.apple.com/search?term=techno&entity=song&limit=50');
+        const data = await res.json();
+        tracks = data.results.filter(t => t.previewUrl);
+        showNext();
     }
 
-    function nextTrack() {
-        if (tracks.length === 0) return fetchMusic().then(nextTrack);
-        
+    function showNext() {
+        if(tracks.length === 0) return;
         currentTrack = tracks.splice(Math.floor(Math.random() * tracks.length), 1)[0];
+        
         const art = currentTrack.artworkUrl100.replace('100x100bb', '600x600bb');
-        
-        // UI Update
-        document.getElementById('song-title').innerText = currentTrack.trackName;
-        document.getElementById('song-artist').innerText = currentTrack.artistName;
         document.getElementById('main-cover').src = art;
-        document.getElementById('blur-bg').style.backgroundImage = `url(${art})`;
+        document.getElementById('display-artist').innerText = currentTrack.artistName;
+        document.getElementById('display-title').innerText = currentTrack.trackName;
+        document.getElementById('display-album').innerText = currentTrack.collectionName;
         
-        // Animation Reset
-        const cover = document.getElementById('main-cover');
-        cover.style.transform = 'translateY(0) scale(1)';
-
-        audio.src = currentTrack.previewUrl;
-        audio.play();
+        // Hintergrundfarbe simulieren (vereinfacht)
+        document.body.style.backgroundColor = `hsl(${Math.random() * 360}, 40%, 40%)`;
+        
+        player.src = currentTrack.previewUrl;
+        player.play();
+        document.getElementById('visualizer').classList.add('playing');
 
         history.unshift(currentTrack);
-        renderHistory();
+        updateHistory();
     }
 
     // SWIPE LOGIC
     document.addEventListener('touchstart', e => startY = e.touches[0].clientY);
     document.addEventListener('touchend', e => {
-        let diff = startY - e.changedTouches[0].clientY;
-        if (diff > 80) { // Swipe Up
-            document.getElementById('main-cover').style.transform = 'translateY(-100vh) scale(0.8)';
-            setTimeout(nextTrack, 300);
+        const diff = startY - e.changedTouches[0].clientY;
+        if(diff > 70) {
+            document.getElementById('main-cover').style.transform = 'translateY(-100vh)';
+            setTimeout(() => {
+                document.getElementById('main-cover').style.transform = 'translateY(0)';
+                showNext();
+            }, 400);
         }
     });
 
     // SPOTIFY FLOW
-    function askSpotify() {
-        audio.pause();
-        document.getElementById('confirm-modal').style.display = 'flex';
+    function triggerSpotify() {
+        player.pause();
+        document.getElementById('modal-overlay').style.display = 'flex';
     }
 
     function closeModal() {
-        document.getElementById('confirm-modal').style.display = 'none';
-        audio.play();
+        document.getElementById('modal-overlay').style.display = 'none';
+        player.play();
     }
 
-    function openSpotify() {
-        const query = encodeURIComponent(`${currentTrack.artistName} ${currentTrack.trackName}`);
-        window.open(`spotify:search:${query}`, '_blank');
+    function confirmSpotify() {
+        const url = `spotify:search:${encodeURIComponent(currentTrack.artistName + ' ' + currentTrack.trackName)}`;
+        window.open(url, '_blank');
         closeModal();
     }
 
-    // HISTORY & DOWNLOAD
-    function renderHistory() {
+    // HISTORY
+    function updateHistory() {
         const list = document.getElementById('history-list');
-        list.innerHTML = history.map((t, i) => `
+        list.innerHTML = history.map(t => `
             <div class="history-item">
                 <img src="${t.artworkUrl100}">
-                <div class="history-item-content">
-                    <h4>${t.trackName}</h4>
-                    <p>${t.artistName}</p>
+                <div style="flex:1">
+                    <b>${t.trackName}</b><br>
+                    <small>${t.artistName}</small>
                 </div>
-                <i class="fas fa-download download-btn" onclick="downloadPreview('${t.previewUrl}', '${t.trackName}')"></i>
-                <i class="fab fa-spotify" style="color:var(--spotify-green); font-size:20px;" onclick="directSpotify('${t.artistName}', '${t.trackName}')"></i>
+                <i class="fas fa-download" onclick="downloadPreview('${t.previewUrl}', '${t.trackName}')"></i>
             </div>
         `).join('');
     }
@@ -271,25 +265,20 @@
         document.getElementById('history-panel').style.display = show ? 'block' : 'none';
     }
 
-    function directSpotify(artist, track) {
-        window.open(`spotify:search:${encodeURIComponent(artist + ' ' + track)}`, '_blank');
-    }
-
     async function downloadPreview(url, name) {
-        const response = await fetch(url);
-        const blob = await response.blob();
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = `${name}.mp3`;
-        link.click();
+        const blob = await fetch(url).then(r => r.blob());
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `${name}.mp3`;
+        a.click();
     }
 
-    audio.ontimeupdate = () => {
-        const p = (audio.currentTime / audio.duration) * 100;
-        document.getElementById('progress-fill').style.width = p + '%';
+    player.ontimeupdate = () => {
+        const p = (player.currentTime / player.duration) * 100;
+        document.getElementById('progress-bar').style.width = p + '%';
     };
 
-    audio.onended = nextTrack;
+    player.onended = showNext;
 </script>
 </body>
 </html>
