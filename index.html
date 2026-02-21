@@ -30,30 +30,39 @@
             transition: background-image 0.8s ease-in-out;
         }
 
+        /* Verläufe jetzt auf Z-Index 20, damit sie das Cover verdecken */
         .gradient-top {
             position: fixed; top: 0; left: 0; width: 100%; height: 25%;
             background: linear-gradient(to bottom, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0) 100%);
-            z-index: 5; pointer-events: none;
+            z-index: 20; pointer-events: none;
         }
         
         .gradient-bottom {
             position: fixed; bottom: 0; left: 0; width: 100%; height: 50%;
             background: linear-gradient(to top, rgba(0,0,0,0.98) 0%, rgba(0,0,0,0) 100%);
-            z-index: 5; /* Hinter die Info-Sektion gelegt */
-            pointer-events: none;
+            z-index: 20; pointer-events: none;
         }
 
         #start-screen {
             position: fixed; inset: 0; z-index: 10000; background: #121212;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
         }
+        
+        /* Bonus: Sanftes Pulsieren für den Start-Button */
         .start-btn {
             background: var(--spotify-green); color: black; border: none;
             padding: 18px 60px; border-radius: 40px; font-size: 20px; font-weight: bold; cursor: pointer;
             box-shadow: 0 4px 15px rgba(29, 185, 84, 0.4);
             transition: transform 0.2s;
+            animation: pulse 2s infinite;
         }
-        .start-btn:active { transform: scale(0.95); }
+        .start-btn:active { transform: scale(0.95); animation: none; }
+        
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(29, 185, 84, 0.7); }
+            70% { box-shadow: 0 0 0 20px rgba(29, 185, 84, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(29, 185, 84, 0); }
+        }
 
         header {
             position: absolute; top: 0; left: 0; width: 100%; height: 60px; z-index: 30;
@@ -91,15 +100,17 @@
         .category-pill:active { transform: scale(0.95); }
         .category-pill.active { background: var(--spotify-green); color: black; }
 
+        /* Z-Index entfernt, damit Elemente sich frei mit den Verläufen mischen können */
         #feed-container {
             height: 100dvh; width: 100vw; display: flex; flex-direction: column;
             align-items: center; justify-content: center; position: relative;
-            z-index: 10;
         }
 
+        /* Liegt jetzt auf Z-Index 10 (HINTER den Verläufen auf 20) */
         .visualizer-wrapper {
             display: flex; align-items: center; gap: 20px; width: 100%; justify-content: center;
             transform: translateY(-20px);
+            position: relative;
             z-index: 10;
         }
 
@@ -141,7 +152,6 @@
             animation: popBigHeart 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
         
-        /* NEU: Play/Pause Indikator wie bei TikTok */
         .play-pause-indicator {
             position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
             font-size: 70px; color: rgba(255,255,255,0.8); opacity: 0; z-index: 25; pointer-events: none;
@@ -158,12 +168,13 @@
             100% { transform: scale(0.5); opacity: 0; }
         }
 
+        /* Z-Index 50 stellt sicher, dass Info VOR den Verläufen liegt */
         .info-section {
             position: absolute; bottom: calc(env(safe-area-inset-bottom) + 30px);
             width: 85vw; max-width: 400px;
             transition: opacity 0.5s ease-in-out;
             display: flex; flex-direction: column; align-items: stretch;
-            z-index: 50; /* Z-Index drastisch erhöht, um sicher VOR dem Gradienten zu sein */
+            z-index: 50; 
         }
         .artist-tag { 
             font-size: 22px; font-weight: 800; margin-bottom: 12px; margin-left: 5px;
@@ -172,7 +183,7 @@
 
         .bottom-card {
             background: var(--card-bg); border-radius: 25px;
-            padding: 15px 20px; display: flex; align-items: center; gap: 15px; /* Gap leicht erhöht */
+            padding: 15px 20px; display: flex; align-items: center; gap: 15px; 
             position: relative; overflow: hidden;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
             backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
@@ -199,7 +210,7 @@
             color: white; padding: 5px; z-index: 10;
         }
         .action-icon.liked { color: #ff3b30; animation: heartBeat 0.3s forwards; }
-        .action-icon:active { transform: scale(0.8); } /* Kleiner Feedback-Effekt */
+        .action-icon:active { transform: scale(0.8); } 
 
         @keyframes heartBeat { 0% { transform: scale(1); } 50% { transform: scale(1.3); } 100% { transform: scale(1); } }
 
@@ -921,7 +932,6 @@
             icon.innerHTML = '<i class="fas fa-pause"></i>';
         }
         
-        // Zeigt das Icon für 0.5 Sekunden an
         icon.classList.add('show');
         setTimeout(() => icon.classList.remove('show'), 500);
         
@@ -979,13 +989,11 @@
         }
     }
 
-    // GEFIXTER TEILEN-LINK
     function shareTrack(event) {
         if (event) event.stopPropagation();
         if (currentIndex === -1) return;
         const track = playedHistory[currentIndex];
         
-        // Baut einen funktionierenden offenen Spotify-Search Link
         const shareUrl = `https://open.spotify.com/search/${encodeURIComponent(track.artistName + ' ' + track.trackName)}`;
         
         if (navigator.share) {
