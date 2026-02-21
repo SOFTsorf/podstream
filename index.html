@@ -172,7 +172,7 @@
             width: 100%; overflow: hidden; white-space: nowrap; position: relative; mask-image: linear-gradient(to right, black 90%, transparent 100%); -webkit-mask-image: linear-gradient(to right, black 90%, transparent 100%);
         }
         .scroll-text {
-            display: inline-block; font-size: 17px; font-weight: 700;
+            display: inline-block; font-size: 17px; font-weight: 700; display: flex; align-items: center; gap: 5px;
         }
         .scroll-subtext {
             display: inline-block; font-size: 14px; opacity: 0.7;
@@ -226,7 +226,6 @@
         .panel-back-right { position: absolute; right: 0; font-size: 24px; cursor: pointer; padding: 10px; z-index: 11; }
         .panel-title { margin: 0; font-size: 20px; font-weight: bold; }
 
-        /* NEU: Suchfeld Styling */
         .search-container {
             margin-top: 15px; position: relative; width: 100%; margin-bottom: 20px;
         }
@@ -239,7 +238,6 @@
             position: absolute; left: 18px; top: 50%; transform: translateY(-50%); color: #aaa;
         }
 
-        /* VERBESSERTE PLATTENKISTE */
         .vinyl-list {
             padding-top: 10px;
             padding-bottom: 100px;
@@ -279,7 +277,6 @@
             width: 14px; height: 14px; background: #fff; border-radius: 50%; border: 1px solid #000;
         }
         
-        /* Vinyl fährt aus und dreht sich, wenn Song aktiv ist */
         .vinyl-item.active-history-item .vinyl-disc {
             transform: translateX(25px);
             animation: spin 3s linear infinite;
@@ -290,12 +287,15 @@
             flex: 1; padding: 0 10px 0 45px; overflow: hidden; z-index: 4;
             display: flex; flex-direction: column; justify-content: center;
         }
-        .vinyl-info b { font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;}
+        .vinyl-info b { font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 4px;}
         .vinyl-info small { color: #aaa; font-size: 13px; }
 
+        /* --- VERBESSERTES E-TAG --- */
         .explicit-tag {
-            background: #aaa; color: #000; font-size: 9px; padding: 1px 4px; 
-            border-radius: 3px; font-weight: bold; margin-left: 5px; vertical-align: middle;
+            background: #b3b3b3; color: #121212; font-size: 9px; padding: 2px 5px; 
+            border-radius: 3px; font-weight: 800; display: inline-flex; 
+            align-items: center; justify-content: center; margin-left: 2px;
+            line-height: 1; height: 14px;
         }
 
         .list-container { margin-top: 10px; }
@@ -307,7 +307,7 @@
         .list-item:active { transform: scale(0.98); }
         .list-item img { width: 55px; height: 55px; border-radius: 10px; object-fit: cover;}
         .list-item-info { flex: 1; overflow: hidden; }
-        .list-item-info b { font-size: 15px; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .list-item-info b { font-size: 15px; display: flex; align-items: center; gap: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .list-item-info small { color: #aaa; }
         
         .list-actions { display: flex; gap: 15px; align-items: center; padding-right: 5px; z-index: 10;}
@@ -460,6 +460,7 @@
     const player = document.getElementById('player');
     const allBars = document.querySelectorAll('.bar');
     const coverContainer = document.getElementById('cover-container');
+    const feedContainer = document.getElementById('feed-container');
     const mainCoverImg = document.getElementById('main-cover');
     const likeBtn = document.getElementById('like-btn');
     
@@ -469,6 +470,7 @@
     let likedTracks = new Map();
     let currentIndex = -1;
     let isTransitioning = false;
+    let easterEggMode = false; // Für Hänno & Snake16 Wackel-Effekt
     
     // History & Blacklist
     let globalPlayedIds = new Set(); 
@@ -482,6 +484,13 @@
 
     // Web Audio API
     let audioCtx, analyser, dataArray;
+
+    // --- HELPER FÜR DAS E-TAG ---
+    function getExplicitTag(track) {
+        const isExp = (track.trackExplicitness && track.trackExplicitness.toLowerCase() === 'explicit') || 
+                      (track.collectionExplicitness && track.collectionExplicitness.toLowerCase() === 'explicit');
+        return isExp ? '<span class="explicit-tag">E</span>' : '';
+    }
 
     async function startApp() {
         document.getElementById('start-screen').style.display = 'none';
@@ -553,7 +562,6 @@
             const query = e.target.value.trim();
             if(!query) return;
             
-            // Tastatur ausblenden (Mobile)
             document.getElementById('search-input').blur();
             
             const resultsContainer = document.getElementById('search-results');
@@ -576,9 +584,9 @@
 
                 let html = '';
                 validResults.forEach(t => {
-                    const explicitTag = t.trackExplicitness === 'explicit' ? '<span class="explicit-tag">E</span>' : '';
+                    const explicitTag = getExplicitTag(t);
                     html += `
-                        <div class="list-item" onclick='playSearchResult(${JSON.stringify(t).replace(/'/g, "&#39;")})'>
+                        <div class="list-item" onclick='playSearchResult(${JSON.stringify(t).replace(/'/g, "'")})'>
                             <img src="${t.artworkUrl100}">
                             <div class="list-item-info">
                                 <b>${t.trackName} ${explicitTag}</b>
@@ -597,7 +605,6 @@
     }
 
     function playSearchResult(track) {
-        // Schließe Such-Panel
         toggleSearch(false);
         playSpecificTrack(track);
     }
@@ -613,7 +620,6 @@
         
         player.pause();
         isTransitioning = true;
-        
         currentIndex = playedHistory.length - 1; 
         
         await loadMusic(category);
@@ -636,10 +642,40 @@
             let bass = dataArray[2] || 0;
             let glowSpread = 20 + (bass / 255) * 45; 
             let glowAlpha = 0.2 + (bass / 255) * 0.5;
-            mainCoverImg.style.boxShadow = `0 15px ${glowSpread}px rgba(29, 185, 84, ${glowAlpha})`;
+
+            // --- EASTER EGG: HEFTIGES WACKELN + RGB GLOW ---
+            if (easterEggMode) {
+                if (bass > 215) { // Bass ist extrem laut
+                    const intensity = bass - 215; 
+                    const x = (Math.random() - 0.5) * intensity * 1.5;
+                    const y = (Math.random() - 0.5) * intensity * 1.5;
+                    feedContainer.style.transform = `translate(${x}px, ${y}px)`;
+                    
+                    // RGB Eskalation beim Cover & Bars
+                    const r = Math.floor(Math.random() * 255);
+                    const g = Math.floor(Math.random() * 255);
+                    const b = Math.floor(Math.random() * 255);
+                    mainCoverImg.style.boxShadow = `0 15px ${glowSpread * 2}px rgba(${r}, ${g}, ${b}, 0.9)`;
+                    allBars.forEach(bar => bar.style.backgroundColor = `rgb(${r},${g},${b})`);
+                } else {
+                    // Normalisieren wenn Bass gerade ruhig ist
+                    feedContainer.style.transform = `translate(0, 0)`;
+                    mainCoverImg.style.boxShadow = `0 15px ${glowSpread}px rgba(29, 185, 84, ${glowAlpha})`;
+                    allBars.forEach(bar => bar.style.backgroundColor = `rgba(255,255,255,0.8)`);
+                }
+            } else {
+                // Normales Verhalten für alle anderen Songs
+                feedContainer.style.transform = `translate(0, 0)`;
+                mainCoverImg.style.boxShadow = `0 15px ${glowSpread}px rgba(29, 185, 84, ${glowAlpha})`;
+                allBars.forEach(bar => bar.style.backgroundColor = `rgba(255,255,255,0.8)`);
+            }
             
         } else if (player.paused) {
-            allBars.forEach(bar => bar.style.height = '10px');
+            allBars.forEach(bar => {
+                bar.style.height = '10px';
+                bar.style.backgroundColor = `rgba(255,255,255,0.8)`;
+            });
+            feedContainer.style.transform = `translate(0, 0)`;
             mainCoverImg.style.boxShadow = `0 15px 40px rgba(0,0,0,0.6)`;
         }
     }
@@ -705,7 +741,7 @@
         
         setTimeout(() => {
             if (el.scrollWidth > container.clientWidth) {
-                el.innerHTML = `${text}        ${text}`;
+                el.innerHTML = `${text} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${text}`;
                 el.classList.add('marquee-active');
             }
         }, 50);
@@ -715,6 +751,12 @@
         isTransitioning = true;
         const infoSection = document.getElementById('info-section');
         const bgBlur = document.getElementById('bg-blur');
+
+        // Check für das Wackel-Easter-Egg
+        const tName = (track.trackName || '').toLowerCase();
+        const aName = (track.artistName || '').toLowerCase();
+        easterEggMode = (tName.includes('backfisch') && aName.includes('snake')) || 
+                        (tName.includes('goldene gans') && (aName.includes('hänno') || aName.includes('noon') || aName.includes('hand')));
 
         if(likedTracks.has(track.trackId)) {
             likeBtn.classList.add('liked');
@@ -755,7 +797,7 @@
                     
                     document.getElementById('display-top-artist').innerText = track.artistName;
                     
-                    const explicitTag = track.trackExplicitness === 'explicit' ? '<span class="explicit-tag">E</span>' : '';
+                    const explicitTag = getExplicitTag(track);
                     applyMarquee('display-title', `${track.trackName} ${explicitTag}`);
                     applyMarquee('display-artist', track.artistName);
 
@@ -764,7 +806,6 @@
                     
                     player.play().then(() => {
                         updateMediaSessionState();
-                        // Wenn History offen ist, Animation triggern
                         if(document.getElementById('history-panel').classList.contains('active')) renderHistory();
                     }).catch(e => console.log("Autoplay blockiert", e));
                     
@@ -941,20 +982,18 @@
         }
     }
 
-    // REDESIGN: Plattenkiste (Verlauf)
     function renderHistory() {
         const list = document.getElementById('history-list');
         let html = '';
         
         for (let i = playedHistory.length - 1; i >= 0; i--) {
             const t = playedHistory[i];
-            // Wir schauen, ob der Track aktiv ist und ob er nicht pausiert ist (für die Rotation)
             const isPlayingNow = (i === currentIndex && !player.paused);
             const isActiveClass = isPlayingNow ? 'active-history-item' : '';
-            const explicitTag = t.trackExplicitness === 'explicit' ? '<span class="explicit-tag">E</span>' : '';
+            const explicitTag = getExplicitTag(t);
 
             html += `
-                <div class="vinyl-item ${isActiveClass}" onclick='playSpecificTrack(${JSON.stringify(t).replace(/'/g, "&#39;")})'>
+                <div class="vinyl-item ${isActiveClass}" onclick='playSpecificTrack(${JSON.stringify(t).replace(/'/g, "'")})'>
                     <div class="vinyl-disc"></div>
                     <img class="vinyl-sleeve" src="${t.artworkUrl100}">
                     <div class="vinyl-info">
@@ -973,14 +1012,14 @@
         const tracksArray = Array.from(likedTracks.values()).reverse();
         
         tracksArray.forEach(t => {
-            const explicitTag = t.trackExplicitness === 'explicit' ? '<span class="explicit-tag">E</span>' : '';
+            const explicitTag = getExplicitTag(t);
             const safeTrackName = t.trackName.replace(/'/g, ""); 
             const safeArtistName = t.artistName.replace(/'/g, "");
 
             html += `
                 <div class="list-item">
-                    <img src="${t.artworkUrl100}" onclick='playSpecificTrack(${JSON.stringify(t).replace(/'/g, "&#39;")})'>
-                    <div class="list-item-info" onclick='playSpecificTrack(${JSON.stringify(t).replace(/'/g, "&#39;")})'>
+                    <img src="${t.artworkUrl100}" onclick='playSpecificTrack(${JSON.stringify(t).replace(/'/g, "'")})'>
+                    <div class="list-item-info" onclick='playSpecificTrack(${JSON.stringify(t).replace(/'/g, "'")})'>
                         <b>${t.trackName} ${explicitTag}</b>
                         <small>${t.artistName}</small>
                     </div>
@@ -1073,7 +1112,6 @@
 
     player.onended = playNextTrack;
     
-    // Play/Pause Listener für Media Session Synchronisation & Verlauf-Animation
     player.addEventListener('play', () => {
         updateMediaSessionState();
         if(document.getElementById('history-panel').classList.contains('active')) renderHistory();
