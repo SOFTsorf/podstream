@@ -95,13 +95,13 @@
         #feed-container {
             height: 100dvh; width: 100vw; display: flex; flex-direction: column;
             align-items: center; justify-content: center; position: relative;
-            z-index: 5;
+            z-index: auto;
         }
 
         .visualizer-wrapper {
             display: flex; align-items: center; gap: 20px; width: 100%; justify-content: center;
             transform: translateY(-20px);
-            z-index: 10; /* Hinter den Gradients (20) */
+            z-index: 30; /* Hinter den Gradients (20) */
             position: relative;
         }
 
