@@ -1,267 +1,255 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="PodStream">
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ultimate Podcast Player (iTunes API)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>PodStream - iTunes Player</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
-            --bg: #121212;
-            --card: #1e1e1e;
-            --text: #ffffff;
-            --accent: #ff2d55;
+            --ios-bg: #000000;
+            --ios-card: #1C1C1E;
+            --ios-blue: #0A84FF;
+            --ios-text: #FFFFFF;
+            --ios-subtext: #8E8E93;
+            --ios-separator: #38383A;
+            --glass-border: 1px solid rgba(255, 255, 255, 0.08);
+            --nav-bg: rgba(20, 20, 20, 0.5);
+            --radius-l: 32px;
+            --radius-m: 18px;
+            --header-height: 100px;
         }
 
-        body {
-            font-family: 'Segoe UI', sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif; 
+            margin: 0; background: var(--ios-bg); color: var(--ios-text); 
+            padding-bottom: 120px; overflow-x: hidden; -webkit-font-smoothing: antialiased;
         }
 
-        header {
-            width: 100%;
-            padding: 20px;
-            background: #000;
-            text-align: center;
-            position: sticky;
-            top: 0;
-            z-index: 100;
+        /* HEADER */
+        header { 
+            position: fixed; top: 0; left: 0; width: 100%; height: var(--header-height);
+            z-index: 1000; display: flex; align-items: center; padding: 0 20px; box-sizing: border-box;
+            transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
         }
+        header.scrolled { height: 70px; background: rgba(0,0,0,0.8); backdrop-filter: blur(20px); border-bottom: var(--glass-border); }
+        .logo { font-size: 34px; font-weight: 800; letter-spacing: -1px; transition: 0.4s; }
+        header.scrolled .logo { font-size: 22px; }
 
-        input {
-            padding: 10px;
-            width: 60%;
-            border-radius: 5px;
-            border: none;
-            font-size: 16px;
+        .header-spacer { height: var(--header-height); }
+
+        /* SEARCH OVERLAY */
+        .search-bar {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(10, 10, 10, 0.95); backdrop-filter: blur(40px);
+            z-index: 5000; opacity: 0; pointer-events: none; transition: 0.3s; padding-top: 60px;
         }
+        .search-bar.active { opacity: 1; pointer-events: auto; }
+        .search-box { display: flex; padding: 0 20px; gap: 15px; }
+        .input-wrap { flex: 1; background: rgba(255, 255, 255, 0.12); border-radius: 12px; display: flex; align-items: center; padding: 12px 15px; }
+        .input-wrap input { background: transparent; border: none; color: white; font-size: 17px; width: 100%; outline: none; margin-left: 10px; }
 
-        button {
-            padding: 10px 20px;
-            background-color: var(--accent);
-            border: none;
-            color: white;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-
+        /* PLAYER CARD (Sticky) */
         #player-container {
-            width: 90%;
-            max-width: 800px;
-            margin: 20px 0;
-            background: var(--card);
-            padding: 15px;
-            border-radius: 10px;
-            display: none; /* Sichtbar wenn etwas spielt */
-            text-align: center;
+            margin: 20px; background: var(--ios-card); border-radius: var(--radius-m);
+            padding: 15px; border: var(--glass-border); display: none;
+            animation: fadeInUp 0.5s ease;
         }
+        video, audio { width: 100%; border-radius: 12px; margin-top: 10px; background: #000; }
 
-        video, audio {
-            width: 100%;
-            border-radius: 8px;
-            margin-top: 10px;
-            background: #000;
-        }
+        /* LISTS */
+        .section-title { padding: 20px; font-size: 22px; font-weight: 700; color: var(--ios-text); }
+        .horizontal-scroll { display: flex; overflow-x: auto; padding: 0 20px 25px; gap: 18px; scrollbar-width: none; }
+        .horizontal-scroll::-webkit-scrollbar { display: none; }
+        
+        .card-item { width: 140px; min-width: 140px; cursor: pointer; text-align: center; }
+        .card-icon { width: 140px; height: 140px; border-radius: 22px; object-fit: cover; margin-bottom: 8px; box-shadow: 0 10px 20px rgba(0,0,0,0.3); }
+        .card-name { font-size: 14px; font-weight: 600; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-        #results {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-            gap: 20px;
-            width: 90%;
-            margin-top: 20px;
-        }
+        .app-list-container { background: var(--ios-card); margin: 0 20px; border-radius: var(--radius-m); padding: 0 16px; border: var(--glass-border); }
+        .app-item { display: flex; padding: 12px 0; border-bottom: 0.5px solid var(--ios-separator); align-items: center; cursor: pointer; }
+        .app-icon { width: 50px; height: 50px; border-radius: 10px; margin-right: 15px; }
+        .app-info { flex: 1; min-width: 0; }
+        .app-name { font-weight: 600; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .app-meta { font-size: 12px; color: var(--ios-subtext); }
+        .play-btn { color: var(--ios-blue); font-weight: 800; font-size: 13px; background: #333; padding: 6px 15px; border-radius: 20px; }
 
-        .podcast-card {
-            background: var(--card);
-            padding: 10px;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: transform 0.2s;
-            text-align: center;
+        /* NAV */
+        .bottom-nav {
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+            width: 220px; height: 70px; background: var(--nav-bg); backdrop-filter: blur(30px);
+            border-radius: 35px; display: flex; justify-content: space-evenly; align-items: center;
+            z-index: 4000; border: 1px solid rgba(255,255,255,0.1);
         }
+        .nav-item { color: rgba(255,255,255,0.5); text-align: center; cursor: pointer; }
+        .nav-item.active { color: #fff; }
+        .nav-item i { font-size: 22px; display: block; margin-bottom: 4px; }
+        .nav-item span { font-size: 10px; font-weight: 600; }
 
-        .podcast-card:hover {
-            transform: scale(1.05);
-            border: 1px solid var(--accent);
-        }
-
-        .podcast-card img {
-            width: 100%;
-            border-radius: 5px;
-        }
-
-        .podcast-card h4 {
-            font-size: 14px;
-            margin: 10px 0 5px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .episode-list {
-            width: 90%;
-            max-width: 800px;
-            margin-top: 20px;
-            background: var(--card);
-            border-radius: 10px;
-            padding: 15px;
-            display: none;
-        }
-
-        .episode-item {
-            padding: 10px;
-            border-bottom: 1px solid #333;
-            cursor: pointer;
-            display: flex;
-            justify-content: space-between;
-        }
-
-        .episode-item:hover {
-            background: #2a2a2a;
-        }
-
-        .tag {
-            font-size: 10px;
-            background: var(--accent);
-            padding: 2px 6px;
-            border-radius: 4px;
-            text-transform: uppercase;
-        }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
 
-<header>
-    <h1>Podcast Streamer</h1>
-    <input type="text" id="search-input" placeholder="Suche nach Podcasts (z.B. Joe Rogan, Tagesschau)...">
-    <button onclick="searchPodcasts()">Suchen</button>
+<header id="main-header">
+    <div class="logo">PodStream</div>
 </header>
 
-<div id="player-container">
-    <h3 id="now-playing-title">Wähle eine Episode</h3>
-    <div id="media-wrapper">
+<div class="header-spacer"></div>
+
+<div class="search-bar" id="search-overlay">
+    <div class="search-box">
+        <div class="input-wrap">
+            <i class="fas fa-search" style="color:var(--ios-subtext)"></i>
+            <input type="text" id="search-input" placeholder="Podcasts suchen..." onkeyup="if(event.key==='Enter') searchPodcasts()">
         </div>
+        <span onclick="toggleSearch(false)" style="color:var(--ios-blue); cursor:pointer;">Abbrechen</span>
+    </div>
+    <div id="search-results" style="padding: 20px; overflow-y: auto; height: 80vh;"></div>
 </div>
 
-<div id="episode-list" class="episode-list">
-    <h3>Episoden</h3>
-    <div id="episodes-container"></div>
+<div id="player-container">
+    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">
+        <img id="player-art" src="" style="width: 50px; height: 50px; border-radius: 8px;">
+        <div style="overflow: hidden;">
+            <div id="player-title" style="font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Titel</div>
+            <div id="player-sub" style="font-size: 12px; color: var(--ios-subtext);">Wird abgespielt...</div>
+        </div>
+    </div>
+    <div id="media-wrapper"></div>
 </div>
 
-<div id="results"></div>
+<div id="content-main">
+    <div class="section-title">Empfohlen</div>
+    <div class="horizontal-scroll" id="trending-scroll">
+        </div>
+
+    <div class="section-title" id="episode-header" style="display:none;">Episoden</div>
+    <div id="episode-list" class="app-list-container" style="display:none;"></div>
+</div>
+
+<nav class="bottom-nav">
+    <div class="nav-item active" onclick="location.reload()">
+        <i class="fas fa-house"></i>
+        <span>Entdecken</span>
+    </div>
+    <div class="nav-item" onclick="toggleSearch(true)">
+        <i class="fas fa-magnifying-glass"></i>
+        <span>Suche</span>
+    </div>
+</nav>
 
 <script>
-    const searchInput = document.getElementById('search-input');
-    const resultsContainer = document.getElementById('results');
-    const episodeList = document.getElementById('episode-list');
-    const episodesContainer = document.getElementById('episodes-container');
-    const playerContainer = document.getElementById('player-container');
-    const mediaWrapper = document.getElementById('media-wrapper');
-    const nowPlayingTitle = document.getElementById('now-playing-title');
+    const PROXY = "https://api.allorigins.win/get?url="; // Schnellerer Proxy-Provider
 
-    // 1. Suche via iTunes API
-    async function searchPodcasts() {
-        const term = searchInput.value;
-        if (!term) return;
-
-        resultsContainer.innerHTML = "Lade...";
-        episodeList.style.display = "none";
-
-        try {
-            const response = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(term)}&entity=podcast&limit=12`);
-            const data = await response.json();
-            displayResults(data.results);
-        } catch (error) {
-            console.error("Fehler bei der Suche:", error);
-            resultsContainer.innerHTML = "Fehler bei der Suche.";
-        }
+    function toggleSearch(show) {
+        document.getElementById('search-overlay').classList.toggle('active', show);
+        if(show) document.getElementById('search-input').focus();
     }
 
-    function displayResults(podcasts) {
-        resultsContainer.innerHTML = "";
-        podcasts.forEach(podcast => {
-            const card = document.createElement('div');
-            card.className = 'podcast-card';
-            card.innerHTML = `
-                <img src="${podcast.artworkUrl600}" alt="Cover">
-                <h4>${podcast.collectionName}</h4>
-                <p style="font-size: 12px; color: #aaa;">${podcast.artistName}</p>
-            `;
-            card.onclick = () => loadEpisodes(podcast.feedUrl);
-            resultsContainer.appendChild(card);
+    async function searchPodcasts() {
+        const query = document.getElementById('search-input').value;
+        const resultsBox = document.getElementById('search-results');
+        resultsBox.innerHTML = "<p>Suche läuft...</p>";
+
+        try {
+            const resp = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(query)}&entity=podcast&limit=15`);
+            const data = await resp.json();
+            resultsBox.innerHTML = "";
+            
+            data.results.forEach(p => {
+                resultsBox.innerHTML += `
+                    <div class="app-item" onclick="loadEpisodes('${p.feedUrl}', '${p.artworkUrl100}')">
+                        <img src="${p.artworkUrl100}" class="app-icon">
+                        <div class="app-info">
+                            <span class="app-name">${p.collectionName}</span>
+                            <span class="app-meta">${p.artistName}</span>
+                        </div>
+                        <i class="fas fa-chevron-right" style="opacity:0.3"></i>
+                    </div>`;
+            });
+        } catch (e) { resultsBox.innerHTML = "Fehler bei der Suche."; }
+    }
+
+    async function loadEpisodes(feedUrl, art) {
+        toggleSearch(false);
+        const list = document.getElementById('episode-list');
+        const header = document.getElementById('episode-header');
+        
+        header.style.display = "block";
+        list.style.display = "block";
+        list.innerHTML = "<p style='padding:20px;'>Episoden werden geladen... (CORS-Check)</p>";
+        list.scrollIntoView({behavior: "smooth"});
+
+        try {
+            const response = await fetch(PROXY + encodeURIComponent(feedUrl));
+            const data = await response.json();
+            const xml = new DOMParser().parseFromString(data.contents, "text/xml");
+            const items = xml.querySelectorAll("item");
+
+            list.innerHTML = "";
+            items.forEach((item, i) => {
+                if(i > 20) return; // Limit für Speed
+                const title = item.querySelector("title").textContent;
+                const enc = item.querySelector("enclosure");
+                if(!enc) return;
+                
+                const url = enc.getAttribute("url");
+                const type = enc.getAttribute("type") || "";
+                const isVideo = type.includes("video") || url.includes(".mp4") || url.includes(".mov");
+
+                list.innerHTML += `
+                    <div class="app-item" onclick="play('${url}', '${title.replace(/'/g, "\\'")}', ${isVideo}, '${art}')">
+                        <div class="app-info">
+                            <span class="app-name">${title}</span>
+                            <span class="app-meta">${isVideo ? 'VIDEO PODCAST' : 'AUDIO EPISODE'}</span>
+                        </div>
+                        <div class="play-btn">PLAY</div>
+                    </div>`;
+            });
+        } catch (e) { list.innerHTML = "Fehler beim Laden des Feeds."; }
+    }
+
+    function play(url, title, isVideo, art) {
+        const container = document.getElementById('player-container');
+        const wrapper = document.getElementById('media-wrapper');
+        document.getElementById('player-title').innerText = title;
+        document.getElementById('player-art').src = art;
+        
+        container.style.display = "block";
+        wrapper.innerHTML = isVideo ? 
+            `<video controls autoplay playsinline><source src="${url}"></video>` : 
+            `<audio controls autoplay><source src="${url}"></audio>`;
+        
+        window.scrollTo({top: 0, behavior: 'smooth'});
+    }
+
+    // Initiale Empfehlungen
+    async function init() {
+        const scroll = document.getElementById('trending-scroll');
+        const terms = ['Tagesschau', 'Huberman', 'Wissen', 'Comedy'];
+        const randomTerm = terms[Math.floor(Math.random() * terms.length)];
+        
+        const resp = await fetch(`https://itunes.apple.com/search?term=${randomTerm}&entity=podcast&limit=6`);
+        const data = await resp.json();
+        
+        data.results.forEach(p => {
+            scroll.innerHTML += `
+                <div class="card-item" onclick="loadEpisodes('${p.feedUrl}', '${p.artworkUrl600}')">
+                    <img src="${p.artworkUrl600}" class="card-icon">
+                    <span class="card-name">${p.collectionName}</span>
+                </div>`;
         });
     }
 
-    // 2. RSS Feed laden und parsen (Wir nutzen einen CORS-Proxy, da RSS-Feeds oft kein CORS erlauben)
-    async function loadEpisodes(feedUrl) {
-        episodesContainer.innerHTML = "Episoden werden geladen...";
-        episodeList.style.display = "block";
-        
-        // Nutze einen öffentlichen CORS Proxy (für Produktion eigenen Server nutzen!)
-        const proxyUrl = "https://api.allorigins.win/get?url=";
-        
-        try {
-            const response = await fetch(proxyUrl + encodeURIComponent(feedUrl));
-            const data = await response.json();
-            const parser = new DOMParser();
-            const xmlDoc = parser.parseFromString(data.contents, "text/xml");
-            const items = xmlDoc.querySelectorAll("item");
+    window.addEventListener('scroll', () => {
+        document.getElementById('main-header').classList.toggle('scrolled', window.scrollY > 20);
+    });
 
-            episodesContainer.innerHTML = "";
-            items.forEach(item => {
-                const title = item.querySelector("title").textContent;
-                const enclosure = item.querySelector("enclosure");
-                if (!enclosure) return;
-
-                const mediaUrl = enclosure.getAttribute("url");
-                const type = enclosure.getAttribute("type"); // z.B. video/mp4 oder audio/mpeg
-
-                const div = document.createElement('div');
-                div.className = 'episode-item';
-                const isVideo = type.includes("video");
-                
-                div.innerHTML = `
-                    <span>${title}</span>
-                    <span class="tag">${isVideo ? 'Video' : 'Audio'}</span>
-                `;
-                div.onclick = () => playMedia(mediaUrl, title, isVideo);
-                episodesContainer.appendChild(div);
-            });
-            
-            // Scrolle zur Liste
-            episodeList.scrollIntoView({ behavior: 'smooth' });
-        } catch (error) {
-            console.error("Fehler beim Laden des Feeds:", error);
-            episodesContainer.innerHTML = "Fehler beim Laden des RSS-Feeds.";
-        }
-    }
-
-    // 3. Media Player steuern
-    function playMedia(url, title, isVideo) {
-        playerContainer.style.display = "block";
-        nowPlayingTitle.innerText = title;
-        
-        if (isVideo) {
-            mediaWrapper.innerHTML = `
-                <video controls autoplay name="media">
-                    <source src="${url}" type="video/mp4">
-                    Dein Browser unterstützt kein Video-Streaming.
-                </video>`;
-        } else {
-            mediaWrapper.innerHTML = `
-                <audio controls autoplay name="media">
-                    <source src="${url}" type="audio/mpeg">
-                    Dein Browser unterstützt kein Audio-Streaming.
-                </audio>`;
-        }
-        
-        playerContainer.scrollIntoView({ behavior: 'smooth' });
-    }
+    init();
 </script>
 
 </body>
