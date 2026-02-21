@@ -3,372 +3,237 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>iOS Lockscreen Player</title>
+    <title>MusicBack</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
-            --text-main: #FFFFFF;
-            --text-sub: rgba(255, 255, 255, 0.6);
-            --glass-bg: rgba(30, 30, 30, 0.4);
-            --glass-border: rgba(255, 255, 255, 0.1);
+            --accent: #1DB954; /* Spotify Green */
+            --bg: #000;
+            --glass: rgba(255, 255, 255, 0.1);
+            --text: #fff;
         }
 
         body, html {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
+            margin: 0; padding: 0; width: 100%; height: 100%;
             font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
-            background-color: #000;
-            color: var(--text-main);
-            overflow: hidden;
-            user-select: none;
-            -webkit-user-select: none;
+            background: var(--bg); color: var(--text); overflow: hidden;
         }
 
-        /* --- DYNAMISCHER HINTERGRUND --- */
+        /* --- START OVERLAY --- */
+        #start-overlay {
+            position: fixed; inset: 0; background: #000; z-index: 9999;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+        .start-btn {
+            padding: 15px 40px; border-radius: 30px; border: 2px solid var(--accent);
+            color: var(--accent); font-size: 20px; font-weight: 700; cursor: pointer;
+            transition: 0.3s; text-transform: uppercase; letter-spacing: 2px;
+        }
+        .start-btn:hover { background: var(--accent); color: #000; }
+
+        /* --- MAIN UI --- */
+        .app-container {
+            position: relative; width: 100%; height: 100%;
+            display: flex; flex-direction: column; align-items: center;
+        }
+
         #bg-blur {
-            position: absolute;
-            top: -10%;
-            left: -10%;
-            width: 120%;
-            height: 120%;
-            background-size: cover;
-            background-position: center;
-            filter: blur(50px) brightness(0.6);
-            z-index: 0;
-            transition: background-image 0.8s ease-in-out;
+            position: absolute; inset: -10%; width: 120%; height: 120%;
+            background-size: cover; background-position: center;
+            filter: blur(60px) brightness(0.4); z-index: 0; transition: 1s ease;
         }
 
-        /* Abdunkelung oben für die Uhrzeit (wie im Screenshot) */
-        .top-gradient {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 30%;
-            background: linear-gradient(to bottom, rgba(0,0,0,0.5), transparent);
-            z-index: 1;
+        header {
+            position: relative; z-index: 10; width: 100%; padding: 50px 20px 20px;
+            display: flex; justify-content: center; align-items: center;
+        }
+        .app-name { font-size: 22px; font-weight: 800; letter-spacing: 1px; }
+        .history-trigger { position: absolute; right: 25px; font-size: 22px; cursor: pointer; opacity: 0.8; }
+
+        /* --- MUSIC CARD (TikTok Style) --- */
+        .feed-container {
+            position: relative; z-index: 5; flex: 1; width: 100%;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
         }
 
-        .container {
-            position: relative;
-            z-index: 2;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            height: 100%;
-            padding: 50px 20px 30px;
-            box-sizing: border-box;
+        .cover-wrap {
+            width: 80vw; height: 80vw; max-width: 350px; max-height: 350px;
+            perspective: 1000px; cursor: pointer;
+        }
+        #current-art {
+            width: 100%; height: 100%; border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.8); object-fit: cover;
+            transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+        .cover-wrap:active #current-art { transform: scale(0.95) rotateY(5deg); }
+
+        /* --- DETAILS & SPOTIFY --- */
+        .bottom-ui {
+            position: relative; z-index: 10; width: 100%; padding: 30px;
+            box-sizing: border-box; display: flex; align-items: flex-end; justify-content: space-between;
         }
 
-        /* --- UHRZEIT --- */
-        .clock-area {
-            text-align: center;
-            margin-bottom: 40px;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        .song-info { flex: 1; margin-right: 20px; }
+        .song-info h1 { font-size: 24px; margin: 0; font-weight: 700; }
+        .song-info p { font-size: 16px; margin: 5px 0 0; color: rgba(255,255,255,0.7); }
+
+        .spotify-link {
+            width: 55px; height: 55px; background: #1DB954; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 28px; color: #000; box-shadow: 0 5px 15px rgba(29, 185, 84, 0.4);
+            cursor: pointer; text-decoration: none; transition: 0.3s;
         }
-        .clock-time {
-            font-size: 80px;
-            font-weight: 700;
-            letter-spacing: -2px;
-            margin: 0;
-            line-height: 1;
+        .spotify-link:active { transform: scale(0.8); }
+
+        /* --- HISTORY MODAL --- */
+        #history-modal {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.9);
+            z-index: 1000; display: none; padding: 60px 25px;
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
         }
-        .clock-date {
-            font-size: 20px;
-            font-weight: 500;
-            margin-top: 5px;
+        .history-list { height: 100%; overflow-y: auto; }
+        .history-item {
+            display: flex; align-items: center; padding: 12px;
+            background: var(--glass); border-radius: 15px; margin-bottom: 10px;
+        }
+        .history-item img { width: 50px; height: 50px; border-radius: 8px; margin-right: 15px; }
+        .close-history { position: absolute; top: 20px; left: 25px; font-size: 20px; }
+
+        /* Progress Bar (TikTok style thin line) */
+        .progress-line {
+            position: absolute; bottom: 0; left: 0; height: 3px;
+            background: var(--accent); width: 0%; transition: linear;
         }
 
-        /* --- GROSSES COVER --- */
-        .artwork-container {
-            flex: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 100%;
-            max-width: 340px;
-        }
-        #artwork {
-            width: 100%;
-            aspect-ratio: 1 / 1;
-            border-radius: 12px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.6);
-            object-fit: cover;
-            transition: opacity 0.4s;
-            cursor: pointer;
-        }
-
-        /* --- PLAYER KARTE (Glassmorphismus) --- */
-        .player-card {
-            width: 100%;
-            max-width: 360px;
-            background: var(--glass-bg);
-            backdrop-filter: blur(30px) saturate(150%);
-            -webkit-backdrop-filter: blur(30px) saturate(150%);
-            border: 1px solid var(--glass-border);
-            border-radius: 24px;
-            padding: 20px;
-            box-sizing: border-box;
-            margin-bottom: 20px;
-        }
-
-        /* Titel & Artist */
-        .track-info {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        #track-title {
-            font-size: 16px;
-            font-weight: 700;
-            margin: 0 0 2px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        #track-artist {
-            font-size: 14px;
-            color: var(--text-sub);
-            margin: 0;
-        }
-
-        /* Progress Bar */
-        .progress-container {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 20px;
-            font-size: 10px;
-            color: var(--text-sub);
-            font-variant-numeric: tabular-nums;
-        }
-        .progress-bar {
-            flex: 1;
-            height: 4px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 2px;
-            position: relative;
-        }
-        .progress-fill {
-            position: absolute;
-            top: 0;
-            left: 0;
-            height: 100%;
-            background: #fff;
-            border-radius: 2px;
-            width: 0%;
-        }
-        .progress-dot {
-            position: absolute;
-            top: 50%;
-            right: -3px;
-            transform: translateY(-50%);
-            width: 6px;
-            height: 6px;
-            background: #fff;
-            border-radius: 50%;
-            box-shadow: 0 0 4px rgba(0,0,0,0.5);
-        }
-
-        /* Controls */
-        .controls {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0 10px;
-        }
-        .controls i {
-            font-size: 24px;
-            cursor: pointer;
-            transition: opacity 0.2s;
-        }
-        .controls i:active { opacity: 0.4; }
-        .controls .fa-star, .controls .fa-podcast { font-size: 18px; color: var(--text-sub); }
-        .controls .play-btn { font-size: 36px; }
-
-        /* Lockscreen Bottom Buttons (Taschenlampe / Kamera) */
-        .bottom-actions {
-            display: flex;
-            justify-content: space-between;
-            width: 100%;
-            max-width: 360px;
-            padding: 0 10px;
-            box-sizing: border-box;
-        }
-        .action-btn {
-            width: 50px;
-            height: 50px;
-            border-radius: 25px;
-            background: var(--glass-bg);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 20px;
-        }
-
-        /* Loader */
-        #loader { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 24px; z-index: 10; }
+        .loader { position: absolute; font-size: 30px; opacity: 0.5; animation: spin 1s infinite linear; }
+        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
-    <div id="bg-blur"></div>
-    <div class="top-gradient"></div>
-
-    <div class="container">
-        
-        <div class="clock-area">
-            <h1 class="clock-time" id="clock">12:14</h1>
-            <div class="clock-date" id="date">Wed Jun 11</div>
-        </div>
-
-        <div id="loader"><i class="fas fa-spinner fa-spin"></i></div>
-
-        <div class="artwork-container">
-            <img id="artwork" src="" alt="Album Art" onclick="nextSong()">
-        </div>
-
-        <div class="player-card">
-            <div class="track-info">
-                <h2 id="track-title">Laden...</h2>
-                <p id="track-artist">Bitte warten</p>
-            </div>
-
-            <div class="progress-container">
-                <span id="time-current">0:00</span>
-                <div class="progress-bar">
-                    <div class="progress-fill" id="progress-fill">
-                        <div class="progress-dot"></div>
-                    </div>
-                </div>
-                <span id="time-remaining">-0:00</span>
-            </div>
-
-            <div class="controls">
-                <i class="fa-regular fa-star"></i>
-                <i class="fas fa-backward-fill" onclick="prevSong()"></i>
-                <i class="fas fa-play play-btn" id="play-btn" onclick="togglePlay()"></i>
-                <i class="fas fa-forward-fill" onclick="nextSong()"></i>
-                <i class="fas fa-podcast"></i>
-            </div>
-        </div>
-
-        <div class="bottom-actions">
-            <div class="action-btn"><i class="fas fa-flashlight"></i></div>
-            <div class="action-btn"><i class="fas fa-camera"></i></div>
-        </div>
-
+    <div id="start-overlay">
+        <div class="app-name" style="margin-bottom: 30px; font-size: 40px;">MusicBack</div>
+        <div class="start-btn" onclick="startApp()">Entdecken</div>
     </div>
 
-    <audio id="audio"></audio>
+    <div class="app-container">
+        <div id="bg-blur"></div>
+        
+        <header>
+            <div class="app-name">MusicBack</div>
+            <i class="fas fa-history history-trigger" onclick="toggleHistory(true)"></i>
+        </header>
+
+        <div class="feed-container">
+            <i class="fas fa-compact-disc loader"></i>
+            <div class="cover-wrap" onclick="nextSong()">
+                <img id="current-art" src="" alt="">
+            </div>
+            <div class="progress-line" id="progress"></div>
+        </div>
+
+        <div class="bottom-ui">
+            <div class="song-info">
+                <h1 id="title">Lade...</h1>
+                <p id="artist">...</p>
+            </div>
+            <a href="#" id="spotify-btn" target="_blank" class="spotify-link">
+                <i class="fab fa-spotify"></i>
+            </a>
+        </div>
+    </div>
+
+    <div id="history-modal">
+        <i class="fas fa-times close-history" onclick="toggleHistory(false)"></i>
+        <h2 style="margin-bottom: 25px;">Zuletzt gehört</h2>
+        <div class="history-list" id="history-content"></div>
+    </div>
+
+    <audio id="player" preload="auto"></audio>
 
 <script>
-    const audio = document.getElementById('audio');
-    const playBtn = document.getElementById('play-btn');
-    const progressFill = document.getElementById('progress-fill');
-    
-    let tracks = [];
-    let currentIndex = 0;
+    const player = document.getElementById('player');
+    const history = [];
+    let currentTracks = [];
 
-    // Uhrzeit setzen wie auf dem Sperrbildschirm
-    function updateClock() {
-        const now = new Date();
-        document.getElementById('clock').innerText = now.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
-        document.getElementById('date').innerText = now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+    function startApp() {
+        document.getElementById('start-overlay').style.display = 'none';
+        fetchNewMusic();
     }
-    setInterval(updateClock, 1000);
-    updateClock();
 
-    // Zuverlässige Musik laden (iTunes API)
-    async function loadMusic() {
-        document.getElementById('loader').style.display = 'block';
-        document.getElementById('artwork').style.opacity = '0.3';
+    async function fetchNewMusic() {
+        const terms = ['Techno', 'House', 'Electronic', 'Phonk', '90s Rave'];
+        const randomTerm = terms[Math.floor(Math.random() * terms.length)];
         
         try {
-            // Suche nach Rock/Metal um den Vibe deiner Screenshots zu matchen
-            const res = await fetch('https://itunes.apple.com/search?term=metal&entity=song&limit=15');
-            const data = await res.json();
-            tracks = data.results.filter(t => t.previewUrl); // Nur Tracks mit Audio
-            
-            if(tracks.length > 0) {
-                loadTrack(0);
-            }
-        } catch (e) {
-            document.getElementById('track-title').innerText = "Fehler beim Laden";
-        }
-    }
-
-    function loadTrack(index) {
-        if (!tracks[index]) return;
-        currentIndex = index;
-        const track = tracks[index];
-        
-        // Artwork in hoher Auflösung holen (600x600 statt 100x100)
-        const highResArt = track.artworkUrl100.replace('100x100bb', '600x600bb');
-        
-        document.getElementById('track-title').innerText = track.trackName;
-        document.getElementById('track-artist').innerText = track.artistName;
-        document.getElementById('artwork').src = highResArt;
-        document.getElementById('bg-blur').style.backgroundImage = `url(${highResArt})`;
-        
-        audio.src = track.previewUrl;
-        
-        document.getElementById('loader').style.display = 'none';
-        document.getElementById('artwork').style.opacity = '1';
-
-        // Autoplay versuchen
-        audio.play().then(() => {
-            playBtn.className = "fas fa-pause play-btn";
-        }).catch(() => {
-            playBtn.className = "fas fa-play play-btn";
-        });
-    }
-
-    function togglePlay() {
-        if (audio.paused) {
-            audio.play();
-            playBtn.className = "fas fa-pause play-btn";
-        } else {
-            audio.pause();
-            playBtn.className = "fas fa-play play-btn";
-        }
+            const r = await fetch(`https://itunes.apple.com/search?term=${randomTerm}&entity=song&limit=30`);
+            const data = await r.json();
+            currentTracks = data.results.filter(t => t.previewUrl);
+            nextSong();
+        } catch (e) { console.error("API Error"); }
     }
 
     function nextSong() {
-        currentIndex = (currentIndex + 1) % tracks.length;
-        loadTrack(currentIndex);
+        if(currentTracks.length === 0) { fetchNewMusic(); return; }
+        
+        const track = currentTracks.pop();
+        const highResArt = track.artworkUrl100.replace('100x100bb', '600x600bb');
+        
+        // UI Update
+        document.getElementById('title').innerText = track.trackName;
+        document.getElementById('artist').innerText = track.artistName;
+        document.getElementById('current-art').src = highResArt;
+        document.getElementById('bg-blur').style.backgroundImage = `url(${highResArt})`;
+        document.getElementById('spotify-btn').href = `spotify:search:${encodeURIComponent(track.artistName + ' ' + track.trackName)}`;
+        
+        // Player
+        player.src = track.previewUrl;
+        player.play();
+
+        // History
+        addToHistory(track);
     }
 
-    function prevSong() {
-        currentIndex = (currentIndex - 1 + tracks.length) % tracks.length;
-        loadTrack(currentIndex);
+    function addToHistory(t) {
+        history.unshift(t);
+        if(history.length > 20) history.pop();
+        updateHistoryUI();
     }
 
-    // Fortschrittsbalken updaten (mit Negativ-Zeit rechts wie bei iOS)
-    audio.ontimeupdate = () => {
-        if(!audio.duration) return;
-        const percent = (audio.currentTime / audio.duration) * 100;
-        progressFill.style.width = `${percent}%`;
-        
-        document.getElementById('time-current').innerText = formatTime(audio.currentTime);
-        
-        const remaining = audio.duration - audio.currentTime;
-        document.getElementById('time-remaining').innerText = "-" + formatTime(remaining);
+    function updateHistoryUI() {
+        const container = document.getElementById('history-content');
+        container.innerHTML = history.map(t => `
+            <div class="history-item" onclick="playFromHistory('${t.previewUrl}', '${t.trackName}', '${t.artistName}', '${t.artworkUrl100}')">
+                <img src="${t.artworkUrl100}">
+                <div style="flex:1">
+                    <div style="font-weight:700; font-size:14px">${t.trackName}</div>
+                    <div style="font-size:12px; opacity:0.6">${t.artistName}</div>
+                </div>
+                <i class="fab fa-spotify" style="color:#1DB954"></i>
+            </div>
+        `).join('');
+    }
+
+    function playFromHistory(url, title, artist, art) {
+        player.src = url;
+        player.play();
+        document.getElementById('title').innerText = title;
+        document.getElementById('artist').innerText = artist;
+        document.getElementById('current-art').src = art.replace('100x100bb', '600x600bb');
+        toggleHistory(false);
+    }
+
+    function toggleHistory(show) {
+        document.getElementById('history-modal').style.display = show ? 'block' : 'none';
+    }
+
+    player.ontimeupdate = () => {
+        const p = (player.currentTime / player.duration) * 100;
+        document.getElementById('progress').style.width = p + '%';
     };
 
-    function formatTime(sec) {
-        const m = Math.floor(sec / 60);
-        const s = Math.floor(sec % 60);
-        return `${m}:${s < 10 ? '0' : ''}${s}`;
-    }
+    player.onended = nextSong;
 
-    audio.onended = nextSong;
-
-    // Start
-    loadMusic();
 </script>
 </body>
 </html>
