@@ -9,7 +9,7 @@
         :root {
             --spotify-green: #1DB954;
             --bg-color: #121212;
-            --card-bg: #2a2a2a;
+            --card-bg: rgba(42, 42, 42, 0.6); 
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -30,20 +30,18 @@
             transition: background-image 0.8s ease-in-out;
         }
 
-        /* FIX: Z-Index auf 30 erhöht, damit es das Cover überdeckt und sanft ausblendet */
         .gradient-top {
-            position: fixed; top: 0; left: 0; width: 100%; height: 30%;
+            position: fixed; top: 0; left: 0; width: 100%; height: 25%;
             background: linear-gradient(to bottom, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0) 100%);
-            z-index: 30; pointer-events: none;
+            z-index: 20; pointer-events: none;
         }
         
         .gradient-bottom {
-            position: fixed; bottom: 0; left: 0; width: 100%; height: 35%;
-            background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0) 100%);
-            z-index: 30; pointer-events: none;
+            position: fixed; bottom: 0; left: 0; width: 100%; height: 40%;
+            background: linear-gradient(to top, rgba(0,0,0,0.98) 0%, rgba(0,0,0,0) 100%);
+            z-index: 20; pointer-events: none;
         }
 
-        /* --- START SCREEN --- */
         #start-screen {
             position: fixed; inset: 0; z-index: 10000; background: #121212;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -56,14 +54,12 @@
         }
         .start-btn:active { transform: scale(0.95); }
 
-        /* --- HEADER --- */
         header {
-            position: absolute; top: 0; left: 0; width: 100%; height: 60px; z-index: 100;
+            position: absolute; top: 0; left: 0; width: 100%; height: 60px; z-index: 30;
             padding: calc(env(safe-area-inset-top) + 15px) 25px 10px; 
             display: flex; justify-content: space-between; align-items: center;
         }
         
-        /* FIX: Logo ist jetzt absolut mittig und stört nicht mehr das Layout */
         .logo-text { 
             position: absolute; left: 50%; transform: translateX(-50%);
             font-size: 18px; font-weight: 700; letter-spacing: 0.5px; 
@@ -75,10 +71,9 @@
         .header-icon { font-size: 22px; cursor: pointer; text-shadow: 0 2px 10px rgba(0,0,0,0.5); transition: transform 0.2s; }
         .header-icon:active { transform: scale(0.8); }
 
-        /* Kategorie Pills */
         .category-container {
             position: absolute; top: calc(env(safe-area-inset-top) + 55px); left: 0; width: 100%;
-            display: flex; gap: 10px; padding: 10px 25px; overflow-x: auto; z-index: 100;
+            display: flex; gap: 10px; padding: 10px 25px; overflow-x: auto; z-index: 30;
             scrollbar-width: none; 
         }
         .category-container::-webkit-scrollbar { display: none; }
@@ -91,16 +86,15 @@
         .category-pill:active { transform: scale(0.95); }
         .category-pill.active { background: var(--spotify-green); color: black; }
 
-        /* --- MAIN CONTENT --- */
         #feed-container {
             height: 100dvh; width: 100vw; display: flex; flex-direction: column;
             align-items: center; justify-content: center; position: relative;
-            z-index: 10; 
         }
 
         .visualizer-wrapper {
             display: flex; align-items: center; gap: 20px; width: 100%; justify-content: center;
             transform: translateY(-20px);
+            z-index: 10;
         }
 
         .audio-bars { display: flex; align-items: center; gap: 4px; height: 50px; }
@@ -112,17 +106,16 @@
         .cover-container {
             position: relative; width: 75vw; max-width: 340px; aspect-ratio: 1/1;
             transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
-            z-index: 10;
+            z-index: 10; 
         }
         .cover-art {
             position: absolute; inset: 0; width: 100%; height: 100%;
             border-radius: 15px; object-fit: cover;
             box-shadow: 0 15px 40px rgba(0,0,0,0.6);
-            transition: opacity 0.6s ease-in-out;
+            transition: opacity 0.6s ease-in-out, box-shadow 0.1s ease-out; 
         }
         .fade-out { opacity: 0 !important; }
 
-        /* Feedback Icon (für Daumen runter) */
         .feedback-icon {
             position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
             font-size: 90px; color: #ff3b30; opacity: 0; z-index: 20; transform: scale(0.5);
@@ -131,13 +124,28 @@
         }
         .feedback-icon.show { opacity: 1; transform: scale(1); }
 
-        /* --- SONG INFO & CARD --- */
+        .big-heart-overlay {
+            position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+            font-size: 110px; color: var(--spotify-green); opacity: 0; z-index: 25; pointer-events: none;
+            text-shadow: 0 15px 35px rgba(0,0,0,0.8);
+        }
+        .big-heart-overlay.animate {
+            animation: popBigHeart 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes popBigHeart {
+            0% { transform: scale(0); opacity: 0; }
+            15% { transform: scale(1.3); opacity: 1; }
+            30% { transform: scale(1); opacity: 1; }
+            70% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(0.5); opacity: 0; }
+        }
+
         .info-section {
             position: absolute; bottom: calc(env(safe-area-inset-bottom) + 30px);
             width: 85vw; max-width: 400px;
             transition: opacity 0.5s ease-in-out;
             display: flex; flex-direction: column; align-items: stretch;
-            z-index: 40; /* Höher als Gradients, damit Karte lesbar bleibt */
+            z-index: 30; 
         }
         .artist-tag { 
             font-size: 22px; font-weight: 800; margin-bottom: 12px; margin-left: 5px;
@@ -149,6 +157,8 @@
             padding: 15px 20px; display: flex; align-items: center; gap: 12px;
             position: relative; overflow: hidden;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255,255,255,0.1);
         }
         
         .song-details { flex: 1; overflow: hidden; position: relative; display: flex; flex-direction: column; gap: 2px;}
@@ -189,7 +199,9 @@
             width: 45px; height: 45px; background: var(--spotify-green);
             border-radius: 50%; display: flex; align-items: center; justify-content: center;
             font-size: 24px; color: black; cursor: pointer; z-index: 2; flex-shrink: 0;
+            transition: transform 0.2s;
         }
+        .spotify-circle:active { transform: scale(0.9); }
 
         .progress-container {
             position: absolute; bottom: 0; left: 0; width: 100%; height: 6px;
@@ -198,9 +210,9 @@
         .progress-line {
             height: 100%; background: var(--spotify-green); width: 0%; 
             border-radius: 0 3px 3px 0; transition: width 0.1s linear; pointer-events: none;
+            box-shadow: 0 0 10px rgba(29, 185, 84, 0.5);
         }
 
-        /* --- PANELS (HISTORY & LIKES) --- */
         .side-panel {
             position: fixed; inset: 0; background: #121212; z-index: 5000;
             padding: calc(env(safe-area-inset-top) + 80px) 20px 20px; overflow-y: auto;
@@ -236,7 +248,6 @@
 
         .active-history-item { border-left: 4px solid var(--spotify-green); background: #333; }
 
-        /* --- MODAL --- */
         #modal-overlay {
             position: fixed; inset: 0; z-index: 10000;
             background: rgba(0,0,0,0.8); display: none;
@@ -298,6 +309,7 @@
             <div class="cover-container" id="cover-container">
                 <img id="main-cover" class="cover-art" src="" alt="">
                 <div id="feedback-icon" class="feedback-icon"><i class="fas fa-thumbs-down"></i></div>
+                <div id="big-heart-icon" class="big-heart-overlay"><i class="fas fa-heart"></i></div>
             </div>
 
             <div class="audio-bars" id="bars-right">
@@ -359,6 +371,7 @@
     const player = document.getElementById('player');
     const allBars = document.querySelectorAll('.bar');
     const coverContainer = document.getElementById('cover-container');
+    const mainCoverImg = document.getElementById('main-cover');
     const likeBtn = document.getElementById('like-btn');
     
     // State
@@ -370,7 +383,7 @@
     
     // History & Blacklist
     let recentHistory = []; 
-    let dislikedArtists = new Set(); // Speichert Artists, die du wegswipest
+    let dislikedArtists = new Set(); 
 
     // Swipe State
     let startY = 0;
@@ -400,22 +413,37 @@
             dataArray = new Uint8Array(analyser.frequencyBinCount);
             drawVisualizer();
         }
-        await loadMusic('Top Hits'); // Standard Start-Kategorie
+        await loadMusic('Top Hits'); 
     }
 
-    // NEU: API Fetch Funktion ausgelagert für die Kategorien
     async function loadMusic(searchTerm) {
         try {
-            const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(searchTerm)}&entity=song&limit=100`);
+            // NEU: country=DE zwingt die API in den deutschen Katalog (liefert englische & deutsche Top-Tracks)
+            // Limit auf 200, damit nach dem Rausfiltern genug Songs übrig sind
+            const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(searchTerm)}&entity=song&limit=200&country=DE`);
             const data = await res.json();
-            tracks = data.results.filter(t => t.previewUrl);
+            
+            // NEU: Strikte Blacklist für unerwünschte Stile/Feiertagsmusik
+            const unwantedKeywords = ['christmas', 'xmas', 'holiday', 'weihnacht', 'weihnachten', 'bollywood', 'indian', 'hindi', 'punjabi', 'navidad'];
+            
+            tracks = data.results.filter(t => {
+                if (!t.previewUrl) return false;
+                
+                // Prüfe Titel, Künstler und Genre auf verbotene Wörter
+                const textToCheck = (t.trackName + " " + t.artistName + " " + (t.primaryGenreName || "")).toLowerCase();
+                if (unwantedKeywords.some(keyword => textToCheck.includes(keyword))) {
+                    return false; // Song wegwerfen
+                }
+                
+                return true; // Song behalten
+            });
+            
             playNextTrack();
         } catch(e) {
             console.error("Laden fehlgeschlagen", e);
         }
     }
 
-    // NEU: Kategorie wechseln
     async function changeCategory(category, btnElement) {
         if(isTransitioning) return;
         
@@ -437,8 +465,9 @@
 
     function drawVisualizer() {
         requestAnimationFrame(drawVisualizer);
-        if (!player.paused) {
+        if (!player.paused && !isDragging) {
             analyser.getByteFrequencyData(dataArray);
+            
             if (allBars.length >= 6) {
                 allBars[0].style.height = 10 + (dataArray[2] / 255) * 35 + 'px';
                 allBars[1].style.height = 10 + (dataArray[4] / 255) * 35 + 'px';
@@ -447,8 +476,15 @@
                 allBars[4].style.height = 10 + (dataArray[4] / 255) * 35 + 'px';
                 allBars[5].style.height = 10 + (dataArray[2] / 255) * 35 + 'px';
             }
-        } else {
+            
+            let bass = dataArray[2] || 0;
+            let glowSpread = 20 + (bass / 255) * 45; 
+            let glowAlpha = 0.2 + (bass / 255) * 0.5;
+            mainCoverImg.style.boxShadow = `0 15px ${glowSpread}px rgba(29, 185, 84, ${glowAlpha})`;
+            
+        } else if (player.paused) {
             allBars.forEach(bar => bar.style.height = '10px');
+            mainCoverImg.style.boxShadow = `0 15px 40px rgba(0,0,0,0.6)`;
         }
     }
 
@@ -458,13 +494,12 @@
             loadTrackIntoUI(playedHistory[currentIndex]);
         } else {
             if(tracks.length === 0) return;
-            isTransitioning = false; // Release lock for direct loading
+            isTransitioning = false; 
             
-            // Filter für Wiederholungen UND Dislikes
             let availableTracks = tracks.filter(t => 
                 !recentHistory.includes(t.trackId) && 
                 !recentHistory.includes(t.artistName) &&
-                !dislikedArtists.has(t.artistName) // Blockiere Artists, die nach rechts geswiped wurden
+                !dislikedArtists.has(t.artistName) 
             );
             
             if (availableTracks.length === 0) {
@@ -472,7 +507,7 @@
                 availableTracks = tracks.filter(t => !dislikedArtists.has(t.artistName));
             }
 
-            if(availableTracks.length === 0) availableTracks = tracks; // Fallback
+            if(availableTracks.length === 0) availableTracks = tracks; 
 
             const newTrack = availableTracks.splice(Math.floor(Math.random() * availableTracks.length), 1)[0];
             
@@ -524,7 +559,6 @@
 
     function loadTrackIntoUI(track) {
         isTransitioning = true;
-        const mainCover = document.getElementById('main-cover');
         const infoSection = document.getElementById('info-section');
         const bgBlur = document.getElementById('bg-blur');
 
@@ -545,12 +579,12 @@
                 clearInterval(fadeOut);
                 player.pause();
                 
-                mainCover.classList.add('fade-out');
+                mainCoverImg.classList.add('fade-out');
                 infoSection.style.opacity = '0';
 
                 setTimeout(() => {
                     const art = track.artworkUrl100.replace('100x100bb', '600x600bb');
-                    mainCover.src = art;
+                    mainCoverImg.src = art;
                     bgBlur.style.backgroundImage = `url('${art}')`;
                     
                     document.getElementById('display-top-artist').innerText = track.artistName;
@@ -562,7 +596,7 @@
                     if (audioCtx.state === 'suspended') audioCtx.resume();
                     player.play();
                     
-                    mainCover.classList.remove('fade-out');
+                    mainCoverImg.classList.remove('fade-out');
                     infoSection.style.opacity = '1';
 
                     let volIn = 0;
@@ -581,7 +615,7 @@
         }, 30); 
     }
 
-    // --- SWIPE & GESTEN (Jetzt mit X und Y Achse!) ---
+    // --- GESTEN & SWIPES ---
     coverContainer.addEventListener('touchstart', e => {
         if (isTransitioning) return;
         startY = e.touches[0].clientY;
@@ -594,8 +628,6 @@
         if (!isDragging || isTransitioning) return;
         const diffY = e.touches[0].clientY - startY;
         const diffX = e.touches[0].clientX - startX;
-        
-        // Cover bewegt sich flexibel in alle Richtungen
         coverContainer.style.transform = `translate(${diffX * 0.4}px, ${diffY * 0.6}px) scale(0.95)`;
     });
 
@@ -608,27 +640,24 @@
         coverContainer.style.transition = 'transform 0.4s cubic-bezier(0.25, 1, 0.5, 1)';
         coverContainer.style.transform = 'translate(0px, 0px) scale(1)';
 
-        // Logik für Daumen runter (Swipe nach rechts)
         if (Math.abs(diffX) > Math.abs(diffY) && diffX > 90) {
             triggerThumbsDown();
         } 
-        // Normaler Swipe nach oben (Next)
         else if (diffY < -80) { 
             if (navigator.vibrate) navigator.vibrate(40); 
             playNextTrack();
         } 
-        // Normaler Swipe nach unten (Prev)
         else if (diffY > 80 && currentIndex > 0) { 
             if (navigator.vibrate) navigator.vibrate(40);
             playPrevTrack();
         } 
-        // Tap oder Double-Tap
         else if (Math.abs(diffY) < 10 && Math.abs(diffX) < 10) { 
             const currentTime = new Date().getTime();
             const tapLength = currentTime - lastTapTime;
             
             if (tapLength < 300 && tapLength > 0) {
                 toggleLike(null, true);
+                triggerBigHeart();
             } else {
                 setTimeout(() => {
                     if(new Date().getTime() - lastTapTime >= 300) togglePlayPause();
@@ -638,15 +667,12 @@
         }
     });
 
-    // NEU: Daumen runter Logik
     function triggerThumbsDown() {
         if(currentIndex === -1) return;
         const currentTrack = playedHistory[currentIndex];
         
-        // Artist blockieren
         dislikedArtists.add(currentTrack.artistName);
         
-        // Icon flashen lassen
         const icon = document.getElementById('feedback-icon');
         icon.classList.add('show');
         if (navigator.vibrate) navigator.vibrate([50, 50, 50]);
@@ -657,7 +683,13 @@
         }, 400);
     }
 
-    // --- INTERAKTIONEN ---
+    function triggerBigHeart() {
+        const heart = document.getElementById('big-heart-icon');
+        heart.classList.remove('animate');
+        void heart.offsetWidth; 
+        heart.classList.add('animate');
+    }
+
     function togglePlayPause() {
         if (isTransitioning) return;
         if (player.paused) {
@@ -684,7 +716,7 @@
             likedTracks.set(track.trackId, track);
             likeBtn.classList.add('liked');
             likeBtn.classList.replace('far', 'fas');
-            if(navigator.vibrate) navigator.vibrate([30, 50, 30]); 
+            if(navigator.vibrate && !isDoubleTap) navigator.vibrate([30, 50, 30]); 
         }
 
         localStorage.setItem('musicback_likes', JSON.stringify(Array.from(likedTracks.values())));
